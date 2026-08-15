@@ -20,20 +20,19 @@ from __future__ import annotations
 import logging
 
 from .assembler import Assembler
+from .data import load_base_chb
 
 logger = logging.getLogger("hcb_builder")
 
 
-def build_script(asm: Assembler, base_chb_path: str, out_path: str) -> None:
-    """读取模板 ``base.chb``，替换脚本正文后写出新文件。
+def build_script(asm: Assembler, out_path: str) -> None:
+    """读取内置模板 ``base.chb``，替换脚本正文后写出新文件。
 
     参数:
         asm: 已解析完成的 :class:`hcb_builder.assembler.Assembler`。
-        base_chb_path: 原版 ``base.chb`` 模板路径。
         out_path: 输出文件路径。
     """
-    with open(base_chb_path, "rb") as g:
-        oribytes = g.read()
+    oribytes = load_base_chb()
 
     # 原文件头 4 字节 = main 主体起始偏移
     main_start = int.from_bytes(oribytes[:4], "little")

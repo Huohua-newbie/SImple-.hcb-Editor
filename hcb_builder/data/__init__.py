@@ -8,6 +8,7 @@
 - :mod:`hcb_builder.data.cg_loaded`  内置的 CG 已加载偏移表
 """
 
+from .base_chb import BASE_CHB_PATH, load_base_chb
 from .bg_list import BG_LIST
 from .cg_loaded import CG_LOADED
 from .cha_list import CHA_LIST
@@ -16,10 +17,12 @@ from .constants import (
     ENDER_BYTES,
     HEADER_BYTES,
     INSTRUCTION_REFERENCE,
+    SCRIPT_ENCODING,
     STRING_ENCODING,
 )
 
 __all__ = [
+    "BASE_CHB_PATH",
     "BASE_OFFSET",
     "BG_LIST",
     "CG_LOADED",
@@ -27,5 +30,7 @@ __all__ = [
     "ENDER_BYTES",
     "HEADER_BYTES",
     "INSTRUCTION_REFERENCE",
+    "SCRIPT_ENCODING",
     "STRING_ENCODING",
+    "load_base_chb",
 ]

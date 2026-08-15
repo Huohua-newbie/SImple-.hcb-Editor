@@ -37,7 +37,7 @@ def parse_script(asm: Assembler, script_path: str) -> None:
         asm: :class:`hcb_builder.assembler.Assembler` 实例。
         script_path: 剧本文本文件路径。
     """
-    with open(script_path, "r", encoding=asm.str_code) as f:
+    with open(script_path, "r", encoding=asm.script_encoding) as f:
         for line in f:
             raw = line.rstrip("\n").rstrip("\r")
             if not raw or raw.startswith("#"):

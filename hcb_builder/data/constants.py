@@ -25,7 +25,10 @@ INSTRUCTION_REFERENCE: dict[str, list[str]] = {
 # 原脚本正文区起始偏移：新脚本的注入位置，也是常量区重定位的基准。
 BASE_OFFSET: int = 0x0008AEC7
 
-# 剧本字符串编码（日文剧本为 GBK，中文剧本也可沿用 GBK）
+# 剧本输入文件的编码（示例统一使用 UTF-8）
+SCRIPT_ENCODING: str = "utf-8"
+
+# 引擎字符串字节码编码（目标引擎内部为 GBK，输出字节时使用）
 STRING_ENCODING: str = "gbk"
 
 # 脚本头部模板字节（[start] 指令展开），从原版 base.chb 截取。

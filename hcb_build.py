@@ -9,9 +9,8 @@
 
 常用选项::
 
-    --script 剧本文件，默认 test.txt
-    --base   原版 base.chb 模板，默认 base.chb
-    --out    输出文件，默认 .test.chb
+    --script 剧本文件
+    --out    输出文件
     -v       输出详细日志
 """
 
@@ -27,6 +26,7 @@ from hcb_builder.data import (
     BG_LIST,
     CG_LOADED,
     CHA_LIST,
+    SCRIPT_ENCODING,
     STRING_ENCODING,
 )
 
@@ -35,9 +35,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="把剧本 DSL 汇编为 HCB 字节码并嫁接到 base.chb 模板。"
     )
-    parser.add_argument("--script", default="test.txt", help="剧本文本文件（默认 test.txt）")
-    parser.add_argument("--base", default="base.chb", help="原版 base.chb 模板（默认 base.chb）")
-    parser.add_argument("--out", default=".test.chb", help="输出文件（默认 .test.chb）")
+    parser.add_argument("--script", help="剧本文本文件")
+    parser.add_argument("--out", default="output.chb", help="输出文件")
     parser.add_argument("-v", "--verbose", action="store_true", help="输出详细日志")
     return parser
 
@@ -55,10 +54,11 @@ def main(argv: list[str] | None = None) -> int:
         cg_loaded=CG_LOADED,
         bg_list=BG_LIST,
         cha_list=CHA_LIST,
+        script_encoding=SCRIPT_ENCODING,
     )
 
     parse_script(asm, args.script)
-    build_script(asm, args.base, args.out)
+    build_script(asm, args.out)
     return 0
 
 

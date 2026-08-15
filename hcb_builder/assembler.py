@@ -36,6 +36,7 @@ class Assembler(InstructionGenerators):
     jmp_real: dict[str, bytes]
     tem_label: int
     new_off: int
+    script_encoding: str
 
     def __init__(
         self,
@@ -44,6 +45,7 @@ class Assembler(InstructionGenerators):
         cg_loaded: dict[str, int] | None = None,
         bg_list: dict[int, list[str]] | None = None,
         cha_list: dict[str, list] | None = None,
+        script_encoding: str = "utf-8",
     ) -> None:
         self.base_off = int(base_off)
         self.str_code = str_code
@@ -51,6 +53,7 @@ class Assembler(InstructionGenerators):
         self.bg_list = dict(bg_list or {})
         self.cha_list = dict(cha_list or {})
         self.logger = logging.getLogger("hcb_builder")
+        self.script_encoding = script_encoding
 
         # 输出缓冲区与累计偏移
         self.output = bytearray()

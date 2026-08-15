@@ -13,9 +13,11 @@ SImple-.hcb-Editor/
 ├── hcb_builder/            # 核心包
 │   ├── __init__.py         # 包导出
 │   ├── opcodes.py          # 字节码编码原语（值 → 字节）
-│   ├── data/               # 静态数据包（常量/背景/角色/CG）
+│   ├── data/               # 静态数据包（常量/模板/背景/角色/CG）
 │   │   ├── __init__.py     # 聚合导出
 │   │   ├── constants.py    # 全局常量与头尾模板
+│   │   ├── base_chb.py     # 内置 base.chb 模板加载
+│   │   ├── base.chb        # 原版模板二进制（包内资源）
 │   │   ├── bg_list.py      # 背景表
 │   │   ├── cha_list.py     # 角色表
 │   │   └── cg_loaded.py    # 内置 CG 偏移表
@@ -23,8 +25,8 @@ SImple-.hcb-Editor/
 │   ├── assembler.py        # 汇编器核心（字节流、符号表、跳转回填）
 │   ├── parser.py           # 剧本文本解析（行分发）
 │   └── builder.py          # 文件组装与写出
-├── base.chb                # 原版模板（只读，提供常量区与 main 尾部）
-├── test.txt                # 输入样例剧本（DSL）
+├── examples/
+│   └── case0.txt           # 输入样例剧本（UTF-8，DSL）
 └── README.md               # 本文档
 ```
 
@@ -33,16 +35,15 @@ SImple-.hcb-Editor/
 ## 快速开始
 
 ```powershell
-# 在 SImple-.hcb-Editor 目录下
-python hcb_build.py --script test.txt --base base.chb --out .test.chb -v
+# 在 SImple-.hcb-Editor 目录下（默认读取 examples/case0.txt）
+python hcb_build.py --script examples/case0.txt --out .test.chb -v
 ```
 
 参数说明：
 
 | 参数 | 默认值 | 含义 |
 | --- | --- | --- |
-| `--script` | `test.txt` | 输入剧本文本 |
-| `--base` | `base.chb` | 原版 `base.chb` 模板 |
+| `--script` | `examples/case0.txt` | 输入剧本文本（UTF-8） |
 | `--out` | `.test.chb` | 输出文件 |
 | `-v` | 关 | 输出详细日志（info 级） |
 
@@ -50,7 +51,7 @@ python hcb_build.py --script test.txt --base base.chb --out .test.chb -v
 
 ```python
 from hcb_builder import Assembler, build_script, parse_script
-from hcb_builder.data import BASE_OFFSET, STRING_ENCODING, BG_LIST, CG_LOADED, CHA_LIST
+from hcb_builder.data import BASE_OFFSET, STRING_ENCODING, SCRIPT_ENCODING, BG_LIST, CG_LOADED, CHA_LIST
 
 asm = Assembler(
    base_off=BASE_OFFSET,
@@ -58,16 +59,17 @@ asm = Assembler(
    cg_loaded=CG_LOADED,
    bg_list=BG_LIST,
    cha_list=CHA_LIST,
+   script_encoding=SCRIPT_ENCODING,
 )
-parse_script(asm, "test.txt")
-build_script(asm, "base.chb", ".test.chb")
+parse_script(asm, "examples/case0.txt")
+build_script(asm, ".test.chb")
 ```
 
 ---
 
 ## 输入 DSL 语法
 
-剧本是 GBK 编码的文本文件，支持三种行：
+剧本输入文件为 UTF-8 编码的文本（引擎内部字符串仍按 GBK 编码输出字节），支持三种行：
 
 - **注释行**：以 `#` 开头；
 - **标签行**：以 `::` 开头，如 `::loop`，用于跳转目标；
@@ -197,33 +199,3 @@ build_script(asm, "base.chb", ".test.chb")
 
 内置的 CG 已加载偏移表，格式为 `{CG名(大写): 偏移}`。`[cgload]` 指令会在运行时
 把新 CG 名注册进此表（以当前偏移为地址）。原独立的 `cg_loaded.txt` 已合并进此模块。
-
----
-
-## 与原版的差异
-
-| 项目 | 原版 | 重构版 |
-| --- | --- | --- |
-| 结构 | 单文件 + 全局变量 | 分模块包，状态封装在 `Assembler` |
-| 生成函数重复调用 | `return_bytes += f(...); length_now += len(f(...))` 调用两次 | 单次调用，消除副作用 |
-| 路径硬编码 | `base/test.txt` 等 | CLI 参数，默认为平铺路径 |
-| 日志 | `print` 混排 | `logging` 分级输出 |
-| 数据修正 | `bg_list[73]` 地址带 `f_` 前缀 | 修正为纯十六进制 `00009345` |
-| 未知指令/缺参 | 静默或崩溃 | 日志告警并跳过 |
-
-> 其余字节级行为与原版保持一致，输出文件内容应与原版逻辑等价。
-
----
-
-## 扩展指南
-
-要适配其它 HCB 脚本，主要修改 [`data/`](hcb_builder/data) 包下的各表：
-
-1. 更新 `BASE_OFFSET`、`HEADER_BYTES`、`ENDER_BYTES`；
-2. 更新 `BG_LIST`、`CHA_LIST` 与各指令的 function 偏移；
-3. 必要时在 [`generators.py`](hcb_builder/generators.py) 调整入参编码。
-
-如需新增指令：
-
-1. 在 [`generators.py`](hcb_builder/generators.py) 添加 `gen_xxx` 方法；
-2. 在 [`parser.py`](hcb_builder/parser.py) 的 `_dispatch` 中添加分发分支。
