@@ -13,13 +13,17 @@ SImple-.hcb-Editor/
 ├── hcb_builder/            # 核心包
 │   ├── __init__.py         # 包导出
 │   ├── opcodes.py          # 字节码编码原语（值 → 字节）
-│   ├── data.py             # 常量表与资源表加载（背景/角色/CG/头尾模板）
+│   ├── data/               # 静态数据包（常量/背景/角色/CG）
+│   │   ├── __init__.py     # 聚合导出
+│   │   ├── constants.py    # 全局常量与头尾模板
+│   │   ├── bg_list.py      # 背景表
+│   │   ├── cha_list.py     # 角色表
+│   │   └── cg_loaded.py    # 内置 CG 偏移表
 │   ├── generators.py       # 各剧本指令的字节码生成器（mixin）
 │   ├── assembler.py        # 汇编器核心（字节流、符号表、跳转回填）
 │   ├── parser.py           # 剧本文本解析（行分发）
 │   └── builder.py          # 文件组装与写出
 ├── base.chb                # 原版模板（只读，提供常量区与 main 尾部）
-├── cg_loaded.txt           # CG 已加载偏移表（资源名 ↔ 偏移）
 ├── test.txt                # 输入样例剧本（DSL）
 └── README.md               # 本文档
 ```
@@ -40,19 +44,18 @@ python hcb_build.py --script test.txt --base base.chb --out .test.chb -v
 | `--script` | `test.txt` | 输入剧本文本 |
 | `--base` | `base.chb` | 原版 `base.chb` 模板 |
 | `--out` | `.test.chb` | 输出文件 |
-| `--cg-list` | `cg_loaded.txt` | CG 已加载偏移表 |
 | `-v` | 关 | 输出详细日志（info 级） |
 
 也可以用库方式调用：
 
 ```python
 from hcb_builder import Assembler, build_script, parse_script
-from hcb_builder.data import BASE_OFFSET, STRING_ENCODING, BG_LIST, CHA_LIST, load_cg_loaded
+from hcb_builder.data import BASE_OFFSET, STRING_ENCODING, BG_LIST, CG_LOADED, CHA_LIST
 
 asm = Assembler(
    base_off=BASE_OFFSET,
    str_code=STRING_ENCODING,
-   cg_loaded=load_cg_loaded("cg_loaded.txt"),
+   cg_loaded=CG_LOADED,
    bg_list=BG_LIST,
    cha_list=CHA_LIST,
 )
@@ -180,7 +183,7 @@ build_script(asm, "base.chb", ".test.chb")
 
 ## 数据表
 
-### 背景表 `BG_LIST`（[`data.py`](hcb_builder/data.py)）
+### 背景表 `BG_LIST`（[`bg_list.py`](hcb_builder/data/bg_list.py)）
 
 `编号 -> [名称, function 地址(十六进制字符串)]`。地址会被转成小端字节序作为
 `call` 操作数。
@@ -190,10 +193,10 @@ build_script(asm, "base.chb", ".test.chb")
 `名字 -> [角色 ID(function 偏移), 显示名, {别名: 别名编号}]`。别名编号为引擎
 内置显示名枚举值，`？？？` 表示隐藏名。
 
-### CG 表 `cg_loaded.txt`
+### CG 表 `CG_LOADED`（[`cg_loaded.py`](hcb_builder/data/cg_loaded.py)）
 
-每两行一组：奇数行为十六进制偏移，偶数行为带引号的 CG 名。`[cgload]` 指令会在
-运行时把新 CG 名注册进此表（以当前偏移为地址）。
+内置的 CG 已加载偏移表，格式为 `{CG名(大写): 偏移}`。`[cgload]` 指令会在运行时
+把新 CG 名注册进此表（以当前偏移为地址）。原独立的 `cg_loaded.txt` 已合并进此模块。
 
 ---
 
@@ -214,7 +217,7 @@ build_script(asm, "base.chb", ".test.chb")
 
 ## 扩展指南
 
-要适配其它 HCB 脚本，主要修改 [`data.py`](hcb_builder/data.py)：
+要适配其它 HCB 脚本，主要修改 [`data/`](hcb_builder/data) 包下的各表：
 
 1. 更新 `BASE_OFFSET`、`HEADER_BYTES`、`ENDER_BYTES`；
 2. 更新 `BG_LIST`、`CHA_LIST` 与各指令的 function 偏移；

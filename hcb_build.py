@@ -12,7 +12,6 @@
     --script 剧本文件，默认 test.txt
     --base   原版 base.chb 模板，默认 base.chb
     --out    输出文件，默认 .test.chb
-    --cg-list CG 已加载偏移表，默认 cg_loaded.txt
     -v       输出详细日志
 """
 
@@ -26,9 +25,9 @@ from hcb_builder import Assembler, build_script, parse_script
 from hcb_builder.data import (
     BASE_OFFSET,
     BG_LIST,
+    CG_LOADED,
     CHA_LIST,
     STRING_ENCODING,
-    load_cg_loaded,
 )
 
 
@@ -39,8 +38,6 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--script", default="test.txt", help="剧本文本文件（默认 test.txt）")
     parser.add_argument("--base", default="base.chb", help="原版 base.chb 模板（默认 base.chb）")
     parser.add_argument("--out", default=".test.chb", help="输出文件（默认 .test.chb）")
-    parser.add_argument("--cg-list", default="cg_loaded.txt",
-                        help="CG 已加载偏移表（默认 cg_loaded.txt）")
     parser.add_argument("-v", "--verbose", action="store_true", help="输出详细日志")
     return parser
 
@@ -52,11 +49,10 @@ def main(argv=None) -> int:
         format="%(levelname)s %(message)s",
     )
 
-    cg_loaded = load_cg_loaded(args.cg_list)
     asm = Assembler(
         base_off=BASE_OFFSET,
         str_code=STRING_ENCODING,
-        cg_loaded=cg_loaded,
+        cg_loaded=CG_LOADED,
         bg_list=BG_LIST,
         cha_list=CHA_LIST,
     )
