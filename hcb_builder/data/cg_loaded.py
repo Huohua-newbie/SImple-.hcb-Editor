@@ -251,7 +251,7 @@ _CG_LOADED_TEXT = """
 """
 
 
-def _parse(text: str) -> dict:
+def _parse(text: str) -> dict[str, int]:
     """把 ``0x偏移 名称`` 文本解析为 ``{名称(大写): 偏移}``。"""
     result = {}
     for line in text.strip().splitlines():
@@ -261,4 +261,4 @@ def _parse(text: str) -> dict:
 
 
 #: CG 已加载偏移表（可变，[cgload] 会向其中注册新 CG）
-CG_LOADED = _parse(_CG_LOADED_TEXT)
+CG_LOADED: dict[str, int] = _parse(_CG_LOADED_TEXT)

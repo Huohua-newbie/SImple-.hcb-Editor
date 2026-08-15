@@ -28,8 +28,23 @@ class Assembler(InstructionGenerators):
         cha_list: 角色表。
     """
 
-    def __init__(self, base_off, str_code="gbk", cg_loaded=None,
-                 bg_list=None, cha_list=None):
+    # --- 汇编器自有状态（mixin 注入的状态见 InstructionGenerators）---
+    output: bytearray
+    isstart: int
+    isend: int
+    jmp_tem: dict[str, bytes]
+    jmp_real: dict[str, bytes]
+    tem_label: int
+    new_off: int
+
+    def __init__(
+        self,
+        base_off: int,
+        str_code: str = "gbk",
+        cg_loaded: dict[str, int] | None = None,
+        bg_list: dict[int, list[str]] | None = None,
+        cha_list: dict[str, list] | None = None,
+    ) -> None:
         self.base_off = int(base_off)
         self.str_code = str_code
         self.cg_loaded = dict(cg_loaded or {})
@@ -72,16 +87,16 @@ class Assembler(InstructionGenerators):
     # ------------------------------------------------------------------ #
     # 标签与跳转
     # ------------------------------------------------------------------ #
-    def label_load(self, label, offset) -> None:
+    def label_load(self, label: str, offset: int) -> None:
         """注册标签真实地址（仅首次定义生效，与源脚本行为一致）。"""
         if label not in self.jmp_real:
             self.jmp_real[label] = u32(offset)
 
-    def register_current_label(self, label) -> None:
+    def register_current_label(self, label: str) -> None:
         """把标签注册为「当前偏移」处。"""
         self.label_load(label, self.base_off + self.length_now)
 
-    def emit_jump(self, kind, target_label) -> bytes:
+    def emit_jump(self, kind: str, target_label: str) -> bytes:
         """生成跳转指令字节；目标未解析时写入占位符并登记。
 
         参数:

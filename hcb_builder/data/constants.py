@@ -8,7 +8,7 @@ from __future__ import annotations
 # --------------------------------------------------------------------------
 # 指令速查表：指令名 -> [中文说明, 对应引擎内部函数 / 备注]
 # --------------------------------------------------------------------------
-INSTRUCTION_REFERENCE = {
+INSTRUCTION_REFERENCE: dict[str, list[str]] = {
     "bg": ["背景", "具体调用 function 手动列表"],
     "bgm": ["BGM", "调用 function 改为直接现场引入"],
     "se": ["音效", "f_0003FC09"],
@@ -23,13 +23,13 @@ INSTRUCTION_REFERENCE = {
 }
 
 # 原脚本正文区起始偏移：新脚本的注入位置，也是常量区重定位的基准。
-BASE_OFFSET = 0x0008AEC7
+BASE_OFFSET: int = 0x0008AEC7
 
 # 剧本字符串编码（日文剧本为 GBK，中文剧本也可沿用 GBK）
-STRING_ENCODING = "gbk"
+STRING_ENCODING: str = "gbk"
 
 # 脚本头部模板字节（[start] 指令展开），从原版 base.chb 截取。
-HEADER_BYTES = (
+HEADER_BYTES: bytes = (
     b"\x01\x00\x00\x0c\x00\x02\x39\x68\x03\x00\x0c\x01\x19\x0e\x03\xa1\xa1\x00"
     b"\x02\x60\x68\x03\x00\x0e\x03\xa1\xa1\x00\x02\xd2\x8b\x03\x00\x0c\x02\x0c"
     b"\x04\x0c\x01\x0c\x01\x08\x02\x7a\x67\x03\x00\x0c\x0d\x08\x08\x08\x08\x02"
@@ -38,7 +38,7 @@ HEADER_BYTES = (
 )
 
 # 脚本尾部模板字节（[end] 指令展开），从原版 base.chb 截取。
-ENDER_BYTES = (
+ENDER_BYTES: bytes = (
     b"\x0c\x00\x08\x02\xf1\x49\x03\x00\x0b\xe8\x03\x02\x95\x06\x04\x00\x02\x23"
     b"\x54\x00\x00\x0c\x00\x0b\xe8\x03\x08\x08\x08\x08\x08\x08\x08\x02\x5a\x11"
     b"\x04\x00\x0b\xdc\x05\x08\x08\x08\x08\x08\x08\x02\x74\x0e\x04\x00\x02\x49"

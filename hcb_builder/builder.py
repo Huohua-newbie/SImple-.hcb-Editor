@@ -19,10 +19,12 @@ from __future__ import annotations
 
 import logging
 
+from .assembler import Assembler
+
 logger = logging.getLogger("hcb_builder")
 
 
-def build_script(asm, base_chb_path, out_path) -> None:
+def build_script(asm: Assembler, base_chb_path: str, out_path: str) -> None:
     """读取模板 ``base.chb``，替换脚本正文后写出新文件。
 
     参数:

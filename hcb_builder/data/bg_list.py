@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-BG_LIST = {
+BG_LIST: dict[int, list[str]] = {
     1: ["ゆめのねどこ·奥座敷", "00005579"],
     2: ["ゆめのねどこ·店先", "00005727"],
     3: ["ゆめのねどこ·店内", "000059E2"],

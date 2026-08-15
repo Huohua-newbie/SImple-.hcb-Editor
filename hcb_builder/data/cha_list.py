@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-CHA_LIST = {
+CHA_LIST: dict[str, list] = {
     "小黑": [0x00000004, "小黑", {}],
     "春": [0x000000DC, "春", {}],
     "千和": [0x000001B4, "千和", {}],

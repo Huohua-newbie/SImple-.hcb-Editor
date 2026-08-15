@@ -23,15 +23,15 @@ OP_JZ        0x07    条件跳转（jz）：后跟 4 字节目标地址
 
 from __future__ import annotations
 
-OP_STRING = b"\x0e"
-OP_CALL = b"\x02"
-OP_U8 = b"\x0c"
-OP_U16 = b"\x0b"
-OP_U32 = b"\x0a"
-OP_NIL = b"\x08"
-OP_NEG = b"\x19"
-OP_JMP = b"\x06"
-OP_JZ = b"\x07"
+OP_STRING: bytes = b"\x0e"
+OP_CALL: bytes = b"\x02"
+OP_U8: bytes = b"\x0c"
+OP_U16: bytes = b"\x0b"
+OP_U32: bytes = b"\x0a"
+OP_NIL: bytes = b"\x08"
+OP_NEG: bytes = b"\x19"
+OP_JMP: bytes = b"\x06"
+OP_JZ: bytes = b"\x07"
 
 
 def u8(value: int) -> bytes:

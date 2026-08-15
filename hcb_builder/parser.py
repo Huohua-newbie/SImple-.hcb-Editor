@@ -14,12 +14,13 @@ from __future__ import annotations
 
 import logging
 
+from .assembler import Assembler
 from .data import ENDER_BYTES, HEADER_BYTES
 
 logger = logging.getLogger("hcb_builder")
 
 # 无需参数的固定字节指令：指令名 -> 字节
-RAW_COMMANDS = {
+RAW_COMMANDS: dict[str, bytes] = {
     "white": (
         b"\x02\x67\x54\x00\x00\x0c\x00\x0b\xe8\x03\x08\x08\x08\x08\x08\x08"
         b"\x08\x02\x5a\x11\x04\x00"
@@ -29,7 +30,7 @@ RAW_COMMANDS = {
 }
 
 
-def parse_script(asm, script_path) -> None:
+def parse_script(asm: Assembler, script_path: str) -> None:
     """解析剧本文件，结果累积到 ``asm`` 中。
 
     参数:
@@ -49,7 +50,7 @@ def parse_script(asm, script_path) -> None:
                 logger.debug("跳过无法识别的行: %r", raw)
 
 
-def _dispatch(asm, line) -> None:
+def _dispatch(asm: Assembler, line: str) -> None:
     """分发单条 ``[指令,...]`` 行。"""
     if not line.endswith("]"):
         logger.warning("行格式错误（缺少右括号）: %r", line)
@@ -96,7 +97,7 @@ def _dispatch(asm, line) -> None:
         logger.warning("未知指令，已忽略: %s", cmd)
 
 
-def _dispatch_sel(asm, rest) -> None:
+def _dispatch_sel(asm: Assembler, rest: str) -> None:
     """分发选项指令。
 
     支持：``[sel,start,文本]``、``[sel,op,文本,目标]``、``[sel,end]``。
@@ -116,7 +117,7 @@ def _dispatch_sel(asm, rest) -> None:
         logger.warning("未知选项子指令: %s", kind)
 
 
-def _dispatch_cgload(asm, cgname) -> None:
+def _dispatch_cgload(asm: Assembler, cgname: str) -> None:
     """分发 CG 加载指令。要求出现在 [start] 之前（isstart == 0）。"""
     if asm.isstart != 0:
         logger.warning("cgload 必须放在 [start] 之前，已忽略: %s", cgname)

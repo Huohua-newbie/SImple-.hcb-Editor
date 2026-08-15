@@ -41,23 +41,23 @@ class InstructionGenerators:
     length_now: int
     select_num: int
     op_num: int
-    sel_target: list
-    bs_current: list
-    bg_list: dict
-    cha_list: dict
-    cg_loaded: dict
+    sel_target: list[str]
+    bs_current: list[str]
+    bg_list: dict[int, list[str]]
+    cha_list: dict[str, list]
+    cg_loaded: dict[str, int]
     logger: logging.Logger
 
-    def label_load(self, label, offset) -> None:  # 由 Assembler 实现
+    def label_load(self, label: str, offset: int) -> None:  # 由 Assembler 实现
         ...
 
-    def emit_jump(self, kind, target_label) -> bytes:  # 由 Assembler 实现
+    def emit_jump(self, kind: str, target_label: str) -> bytes:  # 由 Assembler 实现
         ...
 
     # ------------------------------------------------------------------ #
     # 选项系统
     # ------------------------------------------------------------------ #
-    def gen_selset(self, inputlist):
+    def gen_selset(self, inputlist: list[str]) -> bytes:
         """生成选项指令块。
 
         参数形式：:
@@ -126,7 +126,7 @@ class InstructionGenerators:
     # ------------------------------------------------------------------ #
     # 背景
     # ------------------------------------------------------------------ #
-    def gen_bgset(self, inputlist):
+    def gen_bgset(self, inputlist: list[str]) -> bytes:
         """背景设置。
 
         参数：``[背景编号]`` 或 ``[背景编号, 细分编号]``。背景编号查
@@ -162,7 +162,7 @@ class InstructionGenerators:
     # ------------------------------------------------------------------ #
     # 立绘
     # ------------------------------------------------------------------ #
-    def gen_bsset(self, inputlist):
+    def gen_bsset(self, inputlist: list[str]) -> bytes:
         """立绘设置。
 
         参数（共 10 项）：``[cha, pose, cloth, face, l, 'l/m/r', z, x, y, lyr]``。
@@ -213,7 +213,7 @@ class InstructionGenerators:
         out += call(function_offset)
         return bytes(out)
 
-    def gen_bsfade(self):
+    def gen_bsfade(self) -> bytes:
         """立绘淡出。消费 ``bs_current`` 缓存并调用 0x0000BAA9。"""
         if not self.bs_current:
             self.logger.info("当前无立绘，无法消除")
@@ -226,7 +226,7 @@ class InstructionGenerators:
     # ------------------------------------------------------------------ #
     # 角色说话人
     # ------------------------------------------------------------------ #
-    def gen_chaset(self, inputlist):
+    def gen_chaset(self, inputlist: list[str]) -> bytes:
         """角色说话人设置（SPEAK 部分）。
 
         参数：``[角色名]`` 或 ``[角色名/显示名, 语音编号]``。
@@ -273,7 +273,7 @@ class InstructionGenerators:
     # ------------------------------------------------------------------ #
     # CG
     # ------------------------------------------------------------------ #
-    def gen_cgload(self, cgname):
+    def gen_cgload(self, cgname: str) -> bytes:
         """CG 资源加载代码。
 
         参数：CG 名（不区分大小写）。若该 CG 已在 ``cg_loaded`` 表中则视为
@@ -292,7 +292,7 @@ class InstructionGenerators:
         )
         return bytes(out)
 
-    def gen_cgset(self, inputlist):
+    def gen_cgset(self, inputlist: list[str]) -> bytes:
         """CG 设置。
 
         参数：``[cg名]``（沿用现有设定）或 ``[cg名, x, y, zoom, time]``。
@@ -324,14 +324,14 @@ class InstructionGenerators:
     # ------------------------------------------------------------------ #
     # 对话 / 对话框 / BGM / 音效
     # ------------------------------------------------------------------ #
-    def gen_diaset(self, text):
+    def gen_diaset(self, text: str) -> bytes:
         """对话内容。字符串 + 4 个 nil 入参 + 调用 0x00038347。"""
         out = bytearray(op_string(text, self.str_code))
         out += OP_NIL * 4
         out += call_hex("00038347")
         return bytes(out)
 
-    def gen_msgset(self, inputtype):
+    def gen_msgset(self, inputtype: str) -> bytes:
         """对话框位置 / 显示控制。
 
         参数：``middle``（居中）、``normal``（通常并恢复显示）、
@@ -357,7 +357,7 @@ class InstructionGenerators:
         self.logger.warning("未定义对话栏位置或特殊操作: %s", inputtype)
         return b""
 
-    def gen_bgmset(self, bgm_number):
+    def gen_bgmset(self, bgm_number: str) -> bytes:
         """BGM 设置。参数为 1-255 之间的 BGM 编号。"""
         try:
             bgmnum = int(bgm_number)
@@ -365,7 +365,7 @@ class InstructionGenerators:
             raise ValueError("不合规的入参，预期输入 1-255 之间的整数") from exc
         return op_u8(bgmnum) + OP_NIL * 4 + call_hex("00040552")
 
-    def gen_seset(self, inputlist):
+    def gen_seset(self, inputlist: list[str]) -> bytes:
         """音效设置。
 
         参数：``[编号]``（单次播放）、``[编号, loop, 时长]``（循环）或
