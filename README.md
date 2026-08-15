@@ -1,15 +1,13 @@
-# HCB 剧本编译器（工程化重构版）
+# HCB 剧本编译器
 
 这是一个把**人类可读的剧本 DSL** 编译成 **HCB 字节码**、并嫁接回原版
-`base.chb` 模板的工具。它来自对《さくら、もゆ。》体验版脚本格式的反向分析，
-原版只有一个数百行的单文件脚本（旧 `hcb_build.py`）。本仓库将其拆分为一个
-结构清晰的 Python 包，并补全了文档。
+`base.chb` 模板的工具。它来自对《さくら、もゆ。》体验版脚本格式的反向分析。
 
 ---
 
 ## 目录结构
 
-```
+```text
 SImple-.hcb-Editor/
 ├── hcb_build.py            # CLI 入口（薄封装，参数解析后调用包）
 ├── hcb_builder/            # 核心包
@@ -38,7 +36,7 @@ python hcb_build.py --script test.txt --base base.chb --out .test.chb -v
 参数说明：
 
 | 参数 | 默认值 | 含义 |
-|---|---|---|
+| --- | --- | --- |
 | `--script` | `test.txt` | 输入剧本文本 |
 | `--base` | `base.chb` | 原版 `base.chb` 模板 |
 | `--out` | `.test.chb` | 输出文件 |
@@ -52,11 +50,11 @@ from hcb_builder import Assembler, build_script, parse_script
 from hcb_builder.data import BASE_OFFSET, STRING_ENCODING, BG_LIST, CHA_LIST, load_cg_loaded
 
 asm = Assembler(
-    base_off=BASE_OFFSET,
-    str_code=STRING_ENCODING,
-    cg_loaded=load_cg_loaded("cg_loaded.txt"),
-    bg_list=BG_LIST,
-    cha_list=CHA_LIST,
+   base_off=BASE_OFFSET,
+   str_code=STRING_ENCODING,
+   cg_loaded=load_cg_loaded("cg_loaded.txt"),
+   bg_list=BG_LIST,
+   cha_list=CHA_LIST,
 )
 parse_script(asm, "test.txt")
 build_script(asm, "base.chb", ".test.chb")
@@ -75,7 +73,7 @@ build_script(asm, "base.chb", ".test.chb")
 ### 指令一览
 
 | 指令 | 格式 | 说明 |
-|---|---|---|
+| --- | --- | --- |
 | `bg` | `[bg,编号]` 或 `[bg,编号,细分]` | 设置背景图 |
 | `bgm` | `[bgm,编号]` | 播放 BGM |
 | `bgmstop` | `[bgmstop]` | 停止 BGM |
@@ -96,10 +94,10 @@ build_script(asm, "base.chb", ".test.chb")
 
 ### 选项示例
 
-```
+```text
 [sel,start,你要怎么做？]
 [sel,op,选小猫,::target1]
-[sel,op,选小狗,::target2]
+[sel,op,选小春,::target2]
 [sel,end]
 ```
 
@@ -123,7 +121,7 @@ build_script(asm, "base.chb", ".test.chb")
 
 ### base.chb 布局
 
-```
+```text
 [0:4]            总长度/主区偏移字段 L0（小端）
 [4:base_off]     常量区（函数表、资源索引等）
 [base_off:L0]    脚本正文区（引擎逐字节执行的指令流）
@@ -151,7 +149,7 @@ build_script(asm, "base.chb", ".test.chb")
 见 [`opcodes.py`](hcb_builder/opcodes.py)：
 
 | 操作码 | 字节 | 含义 |
-|---|---|---|
+| --- | --- | --- |
 | `OP_STRING` | `0x0e` | 字符串：1 字节长度 + 字节 + NUL |
 | `OP_CALL` | `0x02` | 调用引擎内部函数：+ 4 字节小端地址 |
 | `OP_U8` | `0x0c` | 单字节无符号整数 |
@@ -202,7 +200,7 @@ build_script(asm, "base.chb", ".test.chb")
 ## 与原版的差异
 
 | 项目 | 原版 | 重构版 |
-|---|---|---|
+| --- | --- | --- |
 | 结构 | 单文件 + 全局变量 | 分模块包，状态封装在 `Assembler` |
 | 生成函数重复调用 | `return_bytes += f(...); length_now += len(f(...))` 调用两次 | 单次调用，消除副作用 |
 | 路径硬编码 | `base/test.txt` 等 | CLI 参数，默认为平铺路径 |
