@@ -1,88 +1,132 @@
-# 现在，这个文档用作示例文档使用
-# 背景图[bg,bgname,(差分)]
-# 播放BGM[bgm,bgm_number]
-# 暂停BGM[bgmstop]
-# 导入CG（需要确保现有或已经cgload）[cg,cgname,xpos,ypos,zoom,time]
-# CGload功能[cgload,cgname]。注意CGload需要放在[start]之前
-# 对话内容[dia,text]
-# 人名[cha,chaname(/showname),(voice_num)]
-# 对话框位置及对话框本身显隐[msg,middle|normal|boxin|boxout]
-# 音效[se,se_num,loop|end,time]或[se,se_num]（单次播放）
-# 立绘[bs,cha,pose,cloth,face,l,'l/m/r',z,x,y,lyr]。复杂得很
-# 选项[sel,start|op|end,seldia{start&op},seltar{op}]首先要开始，然后中间具体选项，最后收尾
-# 清除立绘[bsfade]。效果差，不如直接切背景
-# 跳转[jump]，需要配合标签标记功能
-# 跳转标签::a，可以只标标签不跳转
-# 开始部分[start]，必须有
-# 结束部分[end]，必须有
-# [white]白屏，测试中
-# [eyecatch]转场
-# 接下来，我们就实际展示一下这些功能都怎么用
+# 示例剧本 case0
+# 完整的 DSL 指令格式说明见本目录 README.md
+# 下面按“加载 → 背景/BGM → 音效 → 转场/对话框 → CG → 角色/立绘 → 选项分支”的顺序演示各指令用法
+
+# [cgload] 把 CG 资源 chiwa_fd01a 载入内存，必须在 [start] 之前执行。
 [cgload,chiwa_fd01a]
+
+# [start] 脚本开始标志（必须），展开为脚本头部模板。
 [start]
-# 以下开始正式内容
+
+# ---- 背景与 BGM ----
+# [bg,67] 设置背景为 67 号（参禅町·展望広場），不带差分使用默认构图。
 [bg,67]
+# [dia,文本] 显示对话文本，字符串按 GBK 编码写入字节码。
 [dia,显示背景]
+# [bgm,3] 播放编号 3 的 BGM。
 [bgm,3]
 [dia,播放BGM]
+# [bgmstop] 停止当前 BGM。
 [bgmstop]
 [dia,暂停BGM]
+
+# ---- 音效 ----
+# [se,209] 单次播放 209 号音效。
 [se,209]
 [dia,音效，钟声，单次播放]
+# [se,168,loop,1000] 循环播放 168 号音效，1000 为循环时间参数。
 [se,168,loop,1000]
 [dia,音效，熟悉的歌曲]
+# [se,168,end,3000] 停止 168 号音效的循环，3000 为收尾时长。
 [se,168,end,3000]
 [dia,停止播放]
+
+# ---- 转场与对话框 ----
+# [eyecatch] 播放转场效果。
 [eyecatch]
+# [msg,boxout] 隐藏对话框（引擎入参 (1,-2)）。
 [msg,boxout]
+
+# ---- CG ----
+# [cg,chiwa_fd01a,0,0,1,900] 显示 CG：x=0, y=0, zoom=1（原始大小）, time=900（淡入时长）。
 [cg,chiwa_fd01a,0,0,1,900]
+
+# ---- 角色与立绘 ----
+# [cha,千和] 说话人设为“千和”，本名显示，不带语音。
 [cha,千和]
 [dia,等[·|那][·|个][·|人]回来后，我们四个人一起来考虑这个孩子的名字就太好了……可以吗？]
+
+# [bg,67,1] 设置背景 67 的差分 1。
 [bg,67,1]
+# [bs,...] 立绘：角色3 姿势1 服装1 表情17，l=-1 默认构图，站位 m 居中，z=900，x=0，y=50，层次1。
 [bs,3,1,1,17,-1,m,900,0,50,1]
+
+# [cha,大雅] 说话人设为“大雅”。
 [cha,大雅]
+# [msg,boxin] 显示对话框（引擎入参 (0,nil)）。
 [msg,boxin]
 [dia,……这个，是什么恶作剧……吗？]
+
+# [eyecatch] 转场。
 [eyecatch]
+# [msg,middle] 对话框居中显示（引擎入参 (1,-1)）。
 [msg,middle]
+# [bg,106] 设置背景 106（満月·夜の国）。
 [bg,106]
+# [bgm,44] 播放编号 44 的 BGM。
 [bgm,44]
 [dia,世界于此，暂作叹息……]
+# [cg,mashiro_e011a,0,0,1,900] 显示 CG mashiro_e011a。
 [cg,mashiro_e011a,0,0,1,900]
+# [msg,normal] 对话框回到通常位置，并强制恢复显示。
 [msg,normal]
+# [msg,boxout] 再次隐藏对话框。
 [msg,boxout]
+# [cha,真白/？？？,5000010] 说话人“真白”，显示名隐藏为“？？？”，语音编号 5000010。
 [cha,真白/？？？,5000010]
 [dia,心地善良的人，总是不自觉地成为受难者]
+
+# [eyecatch] 转场。
 [eyecatch]
+# [msg,boxin] 显示对话框。
 [msg,boxin]
+
+# ---- 循环与选项分支 ----
+# ::loop 定义跳转标签，供下方分支回跳。
 ::loop
 [bg,67,1]
 [bgm,3]
+# 双立绘：角色1 站左（l），角色2 站右（r）。
 [bs,1,1,6,16,-1,l,1000,-200,100,1]
 [bs,2,1,2,34,-1,r,1000,200,100,2]
-# [dia,或者，对一个人，见死不救吧]
+
+# [sel,start,标题] 选项开始，渲染选项标题。
 [sel,start,或者，对一个人，见死不救吧]
+# [sel,op,选项文本,目标] 选项1：选中后跳转到 ::target1。
 [sel,op,放弃小黑,::target1]
+# 选项2：选中后跳转到 ::target2。
 [sel,op,放弃小春,::target2]
+# 选项3：选中后跳转到 ::final。
 [sel,op,这不对吧，我玩的不是水葬啊？,::final]
+# [sel,end] 选项结束，生成 G[103] 逐项比较分支。
 [sel,end]
+
+# 分支1（放弃小黑）
 ::target1
 [bg,67]
 [bs,2,1,2,4,-1,m,1000,0,100,2]
 [dia,你抛弃了小猫]
 [dia,有哪里不对，再想想]
+# [jump,::loop] 跳转回循环开头。
 [jump,::loop]
+
+# 分支2（放弃小春）
 ::target2
 [bg,67]
 [bs,1,1,6,4,-1,m,1000,0,100,1]
 [dia,小春又死了，太没人性了]
 [dia,有哪里不对，再想想]
+# 同样跳转回循环开头。
 [jump,::loop]
+
+# 分支3（最终结局）
 ::final
 [dia,对的，实际上这个场景不会发生]
 [eyecatch]
 [bg,112]
 [msg,middle]
 [dia,总之测试到此结束，感谢各位]
+
+# [end] 脚本结束标志（必须），展开为脚本尾部模板。
 [end]
 # 内容到此结束
