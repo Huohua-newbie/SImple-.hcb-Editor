@@ -160,6 +160,20 @@ class HCBScript:
         self._asm.new_off += len(result)
         return self
 
+    def chaload(self, realname: str, aliases: dict[str, int] | None = None) -> "HCBScript":
+        """动态定义说话人（SPEAK）函数，必须在 :meth:`start` 之前调用。
+
+        ``aliases`` 为 ``{显示名: 名义编号}`` 映射；省略时仅支持真实名显示。
+        """
+        if self._asm.isstart != 0:
+            self._asm.logger.warning("chaload 必须放在 start 之前，已忽略: %s", realname)
+            return self
+        parts = [realname] + [f"{num}:{showname}" for showname, num in (aliases or {}).items()]
+        result = self._asm.gen_chaload(parts)
+        self._asm.append(result)
+        self._asm.new_off += len(result)
+        return self
+
     # ------------------------------------------------------------------ #
     # 背景 / CG
     # ------------------------------------------------------------------ #

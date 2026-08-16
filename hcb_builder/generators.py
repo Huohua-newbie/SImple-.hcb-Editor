@@ -23,6 +23,7 @@ from .opcodes import (
     op_string,
     op_u8,
     op_u16,
+    push_int,
     u8,
     u32,
 )
@@ -268,6 +269,90 @@ class InstructionGenerators:
         out += OP_NIL * (3 if cha_realname == "大雅" else 1)
 
         out += call(function_offset)
+        return bytes(out)
+
+    def gen_chaload(self, inputlist: list[str]) -> bytes:
+        """动态生成一个说话人（SPEAK）函数并注册进 ``cha_list``。
+
+        输入：``[真实名, "编号:显示名", ...]``。函数体在当前脚本位置内联生成，
+        通过全局变量 G[227] 传入角色编号，按「名义编号」逐项比较后显示对应名字，
+        未匹配时兜底显示真实名；最后把函数地址与显示名映射写回 ``cha_list``，
+        供 :meth:`gen_chaset` 调用。
+
+        对应原作者的 ``chaload``，须在 [start] 之前使用。
+        """
+        if not inputlist:
+            return b""
+
+        inputname = inputlist[0].strip()
+        if inputname in self.cha_list:
+            self.logger.info("%s 已加载", inputname)
+            return b""
+
+        cha_count = len(self.cha_list)
+        function_offset = self.base_off + self.length_now
+        now_offset = self.base_off + self.length_now
+        dict_cha: dict[str, int] = {}
+
+        out = bytearray()
+
+        # SPEAK 函数固定开头：init_stack(args=3, locals=0)
+        out += b"\x01\x03\x00"
+        out += push_int(cha_count)
+        out += b"\x15\xe3\x00\x0f\xe3\x00"
+        out += call(0x0000186E)
+        now_offset += 16
+
+        # 显示人名判定块（if-else 链）
+        for i in range(len(inputlist) + 1):
+            tmp = bytearray()
+            if i == 0:
+                # 入参 == -1 → 显示 "？？？"
+                tmp += b"\x10\xfd\x0c\x01\x19\x22"
+                tmp += self.emit_jump("jz", f"speak_cha{cha_count}-{i + 1}")
+                tmp += op_string("　 ？？？ 　", self.str_code)
+                tmp += b"\x08"
+                tmp += call(0x00038124)
+                tmp += b"\x0f\xe3\x00\x09"
+                tmp += call(0x000821AB)
+                tmp += b"\x08"
+                tmp += self.emit_jump("jump", "::speak_end")
+            elif i < len(inputlist):
+                # 入参 == 名义编号 → 显示对应名字
+                self.label_load(f"speak_cha{cha_count}-{i}", now_offset)
+                tmp += b"\x10\xfd"
+                tmp += push_int(int(inputlist[i].split(":")[0]))
+                tmp += b"\x22"
+                tmp += self.emit_jump("jz", f"speak_cha{cha_count}-{i + 1}")
+                showname = str(inputlist[i].split(":")[-1])
+                tmp += op_string(showname, self.str_code)
+                tmp += b"\x08"
+                tmp += call(0x00038124)
+                tmp += b"\x0f\xe3\x00\x09"
+                tmp += call(0x000821AB)
+                tmp += b"\x08"
+                tmp += self.emit_jump("jump", "::speak_end")
+                dict_cha[showname] = int(inputlist[i].split(":")[0])
+            else:
+                # 兜底：显示真实名
+                self.label_load(f"speak_cha{cha_count}-{i}", now_offset)
+                tmp += op_string(str(inputlist[0]), self.str_code)
+                tmp += b"\x08"
+                tmp += call(0x00038124)
+                tmp += b"\x0f\xe3\x00\x09"
+                tmp += call(0x000821AB)
+                tmp += b"\x08"
+            now_offset += len(tmp)
+            out += tmp
+
+        # 收尾：保存入参到全局变量并返回
+        self.label_load("::speak_end", now_offset)
+        out += b"\x0c\x01\x15\x1d\x00\x10\xfc\x15\x25\x01\x10\xfe\x15\x26\x01"
+        out += push_int(51)
+        out += call(0x0007837B)
+        out += b"\x14\x15\x27\x01\x04\x04"
+
+        self.cha_list[inputname] = [function_offset, dict_cha]
         return bytes(out)
 
     # ------------------------------------------------------------------ #

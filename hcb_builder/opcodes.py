@@ -79,6 +79,25 @@ def op_int(value: int, width: int = 1) -> bytes:
     return abs(int(value)).to_bytes(width, "little") + OP_NEG
 
 
+def push_int(value: int) -> bytes:
+    """自动选择最短宽度的整数入栈指令（含操作码前缀）。
+
+    与原作者的 ``pushint`` 一致：``0 <= n <= 127`` 用 ``0x0c``（i8）、
+    ``<= 32767`` 用 ``0x0b``（i16）、``<= 2147483647`` 用 ``0x0a``（i32）；
+    负数编码为绝对值 + ``0x19``（neg）。修复了原版 ``0`` 落入「过大」分支的问题。
+    """
+    v = int(value)
+    neg = OP_NEG if v < 0 else b""
+    a = abs(v)
+    if a <= 0x7F:
+        return OP_U8 + u8(a) + neg
+    if a <= 0x7FFF:
+        return OP_U16 + u16(a) + neg
+    if a <= 0x7FFFFFFF:
+        return OP_U32 + u32(a) + neg
+    raise ValueError(f"整数过大: {value}")
+
+
 def op_string(value: str, encoding: str = "gbk") -> bytes:
     """编码字符串操作数：``0x0e`` + 长度字节 + 字节 + NUL。
 

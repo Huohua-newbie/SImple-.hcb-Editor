@@ -87,6 +87,8 @@ def _dispatch(asm: Assembler, line: str) -> None:
         _dispatch_sel(asm, rest)
     elif cmd == "cgload":
         _dispatch_cgload(asm, rest.strip())
+    elif cmd == "chaload":
+        _dispatch_chaload(asm, rest)
     elif cmd == "start":
         asm.isstart += 1
         asm.append(HEADER_BYTES)
@@ -130,3 +132,17 @@ def _dispatch_cgload(asm: Assembler, cgname: str) -> None:
     asm.cg_loaded[cgname.upper()] = cg_offset
     asm.new_off += len(result)
     logger.info("cgload %s -> 0x%08X", cgname.upper(), cg_offset)
+
+
+def _dispatch_chaload(asm: Assembler, rest: str) -> None:
+    """分发动态角色函数生成指令。要求出现在 [start] 之前（isstart == 0）。"""
+    if asm.isstart != 0:
+        logger.warning("chaload 必须放在 [start] 之前，已忽略")
+        return
+
+    args = [a.strip() for a in rest.split(",")]
+    result = asm.gen_chaload(args)
+    asm.append(result)
+    asm.new_off += len(result)
+    name = args[0].strip() if args else "?"
+    logger.info("chaload %s -> 0x%08X", name, asm.base_off + asm.length_now - len(result))
