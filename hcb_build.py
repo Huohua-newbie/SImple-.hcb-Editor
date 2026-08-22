@@ -90,6 +90,136 @@ select_num=0
 op_num=0
 sel_target=[]
 
+cha_list={
+	'小黑':[0x00000004,'小黑',{}],
+	'春':[0x000000DC,'春',{}],
+	'千和':[0x000001B4,'千和',{}],
+	'姫织':[0x0000028C,'姫织',{}],
+	'真白':[0x00000362,'真白',{}],
+	'十夜':[0x0000043A,'十夜',{}],
+	'朝日':[0x00000512,'朝日',{}],
+	'梓咲':[0x000005EA,'梓咲',{}],
+	'七七':[0x000006C2,'七七',{}],
+	'智仁':[0x0000079A,'智仁',{}],
+	'索尔':[0x00000872,'索尔',{'一磨':10,'遠矢':100}],
+	'纳哈特':[0x000009D0,'纳哈特',{}],
+	'女孩子':[0x00000AB0,'女孩子',{}],
+	'大雅':[0x00001784,'大雅',{'奏大雅':10}],
+}
+def pushstr(inputtext):
+	return_bytes=b''
+	try:
+		str_bytes=inputtext.encode(str_code)
+	except Exception as e:
+		raise(f'在“inputtext”中含有{str_code}不支持的字符')
+		return (return_bytes)
+	length=len(str_bytes)+1
+	return_bytes+=b'\x0e'
+	return_bytes+=length.to_bytes()
+	return_bytes+=str_bytes
+	return_bytes+=b'\x00'
+	return(return_bytes)
+
+def pushint(inputint):
+	return_bytes=b''
+	m_add=b''
+	iint=int(inputint)
+	if iint<0:
+		iint*=-1
+		m_add+=b'\x19'
+	if 0<iint<=127:
+		return_bytes+=b'\x0c'
+		return_bytes+=iint.to_bytes()
+	elif 127<iint<=32767:
+		return_bytes+=b'\x0b'
+		return_bytes+=iint.to_bytes(2,'little')
+	elif 32767<iint<=2147483647:
+		return_bytes+=b'\x0a'
+		return_bytes+=iint.to_bytes(4,'little')
+	else:
+		print('输入数字过大，请检查')
+		return(return_bytes)
+	return_bytes+=m_add
+	return(return_bytes)
+
+def chaload(inputlist):
+	global cha_list
+	#预期输入[chaload,realname,n:showname]
+	#首先，固定一个角色编号。这里我们直接按冗余内容试试。50开始
+	#如果不行那就老老实实len(cha_list)
+	#cha_count=50
+	cha_count=len(cha_list)
+	return_bytes=b''
+	function_hex=int(int(base_off)+length_now)
+	now_offset=int(int(base_off)+length_now)
+	dict_cha={}
+	inputname=inputlist[0].strip()
+	if inputname in cha_list:
+		print(f'{inputname} is loaded.')
+	else:
+		#SPEAK的固定开头
+		return_bytes+=b'\x01\x03\x00'
+		return_bytes+=pushint(cha_count)
+		return_bytes+=b'\x15\xE3\x00\x0F\xE3\x00\x02\x6E\x18\x00\x00'
+		now_offset+=16
+		#接着是具体显示人名的块
+		for i in range(len(inputlist)+1):
+			tmp_bytes=b''
+			if i==0:
+				#第二入参是否为-1的判定
+				tmp_bytes+=b'\x10\xFD\x0C\x01\x19\x22'
+				#跳转到下一处判定
+				next_tar=f'speak_cha{cha_count}-{i+1}'
+				tmp_bytes+=jmpset(['jz',next_tar])
+				#设定显示为？？？
+				tmp_bytes+=pushstr('　 ？？？ 　')
+				tmp_bytes+=b'\x08\x02\x24\x81\x03\x00\x0F\xE3\x00\x09\x02\xAB\x21\x08\x00'
+				#跳转到末尾设定
+				tmp_bytes+=jmpset(['jump',f'::speak_end'])
+				now_offset+=len(tmp_bytes)
+				return_bytes+=tmp_bytes
+			elif i<len(inputlist):
+				#注册当前偏移
+				now_tar=f'speak_cha{cha_count}-{i}'
+				label_load(now_tar,now_offset)
+				#第二入参判断
+				tmp_bytes+=b'\x10\xFD'
+				tmp_bytes+=pushint(int(inputlist[i].split(':')[0]))
+				tmp_bytes+=b'\x22'
+				#若否，跳转下一处判定
+				next_tar=f'speak_cha{cha_count}-{i+1}'
+				tmp_bytes+=jmpset(['jz',next_tar])
+				#设定具体显示内容
+				tmp_bytes+=pushstr(str(inputlist[i].split(':')[-1]))
+				tmp_bytes+=b'\x08\x02\x24\x81\x03\x00\x0F\xE3\x00\x09\x02\xAB\x21\x08\x00'
+				#跳转到末尾设定
+				tmp_bytes+=jmpset(['jump',f'::speak_end'])
+				now_offset+=len(tmp_bytes)
+				return_bytes+=tmp_bytes
+				dict_cha[str(inputlist[i].split(':')[-1]).strip()]=int(inputlist[i].split(':')[0])
+			else:
+				#注册当前偏移
+				now_tar=f'speak_cha{cha_count}-{i}'
+				label_load(now_tar,now_offset)
+				#设定具体显示内容
+				tmp_bytes+=pushstr(str(inputlist[0]))
+				tmp_bytes+=b'\x08\x02\x24\x81\x03\x00\x0F\xE3\x00\x09\x02\xAB\x21\x08\x00'
+				now_offset+=len(tmp_bytes)
+				return_bytes+=tmp_bytes
+		#注册固定end部分偏移
+		end_tar='::speak_end'
+		label_load(end_tar,now_offset)
+		#末尾固定部分
+		return_bytes+=b'\x0C\x01\x15\x1D\x00\x10\xFC\x15\x25\x01\x10\xFE\x15\x26\x01'
+		return_bytes+=pushint(51)
+		return_bytes+=b'\x02\x7B\x83\x07\x00\x14\x15\x27\x01\x04\x04'
+			
+		cha_count+=1
+		
+		cha_list[inputname]=[function_hex,dict_cha]
+	return (return_bytes)
+
+
 def selset(inputlist):
 	#预期输入[sel,start/op/end,seldia,seltar|op]
 	#基本选项架构
@@ -212,22 +342,7 @@ with open('base/cg_loaded.txt') as f:
 	lines = [line.strip() for line in f if line.strip()]
 cg_loaded = {lines[i+1].strip('"').upper(): int(lines[i],16) for i in range(0, len(lines), 2)}
 
-cha_list={
-	'小黑':[0x00000004,'小黑',{}],
-	'春':[0x000000DC,'春',{}],
-	'千和':[0x000001B4,'千和',{}],
-	'姫织':[0x0000028C,'姫织',{}],
-	'真白':[0x00000362,'真白',{}],
-	'十夜':[0x0000043A,'十夜',{}],
-	'朝日':[0x00000512,'朝日',{}],
-	'梓咲':[0x000005EA,'梓咲',{}],
-	'七七':[0x000006C2,'七七',{}],
-	'智仁':[0x0000079A,'智仁',{}],
-	'索尔':[0x00000872,'索尔',{'一磨':10,'遠矢':100}],
-	'纳哈特':[0x000009D0,'纳哈特',{}],
-	'女孩子':[0x00000AB0,'女孩子',{}],
-	'大雅':[0x00001784,'大雅',{'奏大雅':10}],
-}
+
 
 
 bs_current=[]
@@ -346,7 +461,7 @@ def chaset(inputlist):
 		#使用其他名义
 		if '/' in inputlist[0]:
 			#
-			cha_showname=inputlist[0].split('/')[-1]
+			cha_showname=inputlist[0].split('/')[-1].strip()
 			if cha_showname in cha_list[cha_realname][-1]:
 				nameshowint=cha_list[cha_realname][-1][cha_showname]
 				return_bytes+=b'\x0c'
@@ -600,6 +715,14 @@ def line_to_hcb(script):
 					new_off+=len(result)
 					print(cg_loaded[inputlist[-1].upper()])
 					print(inputlist[-1].upper())
+			elif inputlist[0]=='chaload':
+				if isstart==0:
+					result=chaload(inputlist[1:])
+					return_bytes+=result
+					
+					length_now+=len(result)
+					new_off+=len(result)
+					print(cha_list)
 			elif inputlist[0]=='start':
 				isstart+=1
 				return_bytes+=header_bytes
@@ -624,7 +747,7 @@ if __name__ == '__main__':
 	#isstart=0
 	#isend=0
 	#script=input('输入待处理剧本文件名：')
-	script='base/test.txt'
+	script='base/Script.txt'
 	line_to_hcb(script)
 	return_bytes=jmpreplace(return_bytes)
 	with open('base/base.chb','rb') as g,open('.test.chb','wb') as h:
