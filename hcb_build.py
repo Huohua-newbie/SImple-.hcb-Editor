@@ -106,6 +106,7 @@ cha_list={
 	'女孩子':[0x00000AB0,'女孩子',{}],
 	'大雅':[0x00001784,'大雅',{'奏大雅':10}],
 }
+#0x0E的模仿
 def pushstr(inputtext):
 	return_bytes=b''
 	try:
@@ -119,7 +120,7 @@ def pushstr(inputtext):
 	return_bytes+=str_bytes
 	return_bytes+=b'\x00'
 	return(return_bytes)
-
+#0x0A,0x0B,0x0C的模仿，同时考虑0x19的取相反数操作
 def pushint(inputint):
 	return_bytes=b''
 	m_add=b''
@@ -127,7 +128,7 @@ def pushint(inputint):
 	if iint<0:
 		iint*=-1
 		m_add+=b'\x19'
-	if 0<iint<=127:
+	if 0<=iint<=127:
 		return_bytes+=b'\x0c'
 		return_bytes+=iint.to_bytes()
 	elif 127<iint<=32767:
@@ -141,6 +142,131 @@ def pushint(inputint):
 		return(return_bytes)
 	return_bytes+=m_add
 	return(return_bytes)
+
+#0x02
+def call_function(input_function_off):
+	return_bytes=b'\x02'
+	if type(input_function_off)==str :
+		func_off=int(input_function_off,16)
+	elif type(input_function_off)==int:
+		func_off=input_function_off
+	else:
+		print('输入类型错误')
+	return_bytes+=func_off.to_bytes(4,'little')
+	return(return_bytes)
+#连续写入0x08
+def pushnil(n=1):
+	try:
+		nil_num=int(n)
+	except Exception as e:
+		raise(f'需要写入一个整数，当前写入内容为{n}')
+	nil_bytes=b'\x08'
+	return_bytes=nil_bytes*nil_num
+	return(return_bytes)
+	
+#0x15，写入入参
+def popglobal(n):
+	return_bytes=b''
+	try:
+		global_num=int(n)
+	except Exception as e:
+		raise(f'需要写入一个整数，当前写入内容为{n}')
+	return_bytes+=b'\x15'
+	return_bytes+=global_num.to_bytes(2,'little')
+	return(return_bytes)
+
+def bs_ani(inputlist):
+	#立绘图小动作，5入参，第一入参确定具体动哪个立绘
+	#预期输入[bs_ani,chanum,no]
+	return_bytes=b''
+	function_offset=0x0006D065
+	return_bytes+=pushint(inputlist[0])
+	return_bytes+=pushint(inputlist[1])
+	return_bytes+=pushnil(3)
+	return_bytes+=call_function(function_offset)
+	return (return_bytes)
+
+
+def shakeset(inputlist):
+	#抖动，预期输入[shake,num,mode,width]
+	return_bytes=b''
+	function_offset=0x0003DF65
+	#第一入参，次数；第二入参模式，第三入参幅度。
+	#一共7个入参
+	for i in range(3):
+		try:
+			return_bytes+=pushint(int(inputlist[i]))
+		except Exception as e:
+			return_bytes+=pushnil()
+	return_bytes+=pushnil(4)
+	return_bytes+=call_function(function_offset)
+	return (return_bytes)
+def v3dset(inputlist):
+	#镜头的运动。预计输入[v3d,x,y,z,time]
+	return_bytes=b''
+	function_offset=0x0003DAD9
+	function_fast_offset=0x0003DA51
+	#前三个入参都是pushint完成
+	for i in range(3):
+		try:
+			return_bytes+=pushint(int(inputlist[i]))
+		except Exception as e:
+			return_bytes+=pushnil()
+	#快速模式的变体
+	if len(inputlist)==3:
+		return_bytes+=pushnil()
+		return_bytes+=call_function(function_fast_offset)
+	else:
+		try:
+			return_bytes+=pushint(int(inputlist[i]))
+		except Exception as e:
+			return_bytes+=pushnil()
+		#后续8个入参，此处全部按0x08
+		return_bytes+=pushnil(8)
+		return_bytes+=call_function(function_offset)
+	return (return_bytes)
+
+def motionset(inputlist):
+	#主舞台的运动。预计输入[motion,x,y,z,time]
+	return_bytes=b''
+	function_offset=0x0003D4B4
+	#前三个入参都是pushint完成
+	for i in range(3):
+		try:
+			return_bytes+=pushint(int(inputlist[i]))
+		except Exception as e:
+			return_bytes+=pushnil()
+	#第四入参，nil
+	return_bytes+=pushnil()
+	#第五入参，时间
+	return_bytes+=pushint(int(inputlist[3]))
+	#后续7个入参，此处全部按0x08
+	return_bytes+=pushnil(7)
+	return_bytes+=call_function(function_offset)
+	return (return_bytes)
+
+	
+def waitset(inputlist):
+	return_bytes=b''
+	function_offset=0x0002A766
+	wait_time=int(inputlist[0])
+	return_bytes+=pushint(wait_time)
+	return_bytes+=pushnil()
+	return_bytes+=call_function(function_offset)
+	return(return_bytes)
+
+def effectset(inputlist):
+	#预期输入为[effectset,num,time]
+	return_bytes=b''
+	function_offset=0x0004115A
+	#转场特效，需求入参9个，第一入参为编号
+	return_bytes+=pushint(int(inputlist[0]))
+	#第二入参时长设定
+	return_bytes+=pushint(int(inputlist[1]))
+	#后面7个入参都按0x08好了
+	return_bytes+=pushnil(7)
+	return_bytes+=call_function(function_offset)
+	return (return_bytes)
 
 def chaload(inputlist):
 	global cha_list
@@ -227,9 +353,9 @@ def selset(inputlist):
 	global op_num
 	global sel_target
 	return_bytes=b''
-	sel_start=int(0x0003836D).to_bytes(4,'little')
-	sel_option=int(0x00057F0D).to_bytes(4,'little')
-	sel_end=int(0x0005800B).to_bytes(4,'little')
+	sel_start=0x0003836D
+	sel_option=0x00057F0D
+	sel_end=0x0005800B
 	if inputlist[0]=='start':
 		try:
 			str_bytes=inputlist[1].encode(str_code)
@@ -242,12 +368,10 @@ def selset(inputlist):
 		label_load(select_label,sel_offset)
 		#写入正式内容
 		#共4入参，第一入参为字符串，后续均为08即可
-		length=len(str_bytes)+1
-		return_bytes+=b'\x0E'
-		return_bytes+=length.to_bytes()
-		return_bytes+=str_bytes
-		return_bytes+=b'\x00\x08\x08\x08\x02'
-		return_bytes+=sel_start
+		return_bytes+=pushstr(inputlist[1])
+
+		return_bytes+=pushnil(3)
+		return_bytes+=call_function(sel_start)
 	elif inputlist[0]=='op':
 		try:
 			str_bytes=inputlist[1].encode(str_code)
@@ -255,19 +379,17 @@ def selset(inputlist):
 			raise(f'在“{inputlist[1]}”中含有{str_code}不支持的字符')
 		op_num+=1
 		#3入参，第一入参字符串，后续0x08
-		length=len(str_bytes)+1
-		return_bytes+=b'\x0E'
-		return_bytes+=length.to_bytes()
-		return_bytes+=str_bytes
-		return_bytes+=b'\x00\x08\x08\x02'
-		return_bytes+=sel_option
+		return_bytes+=pushstr(inputlist[1])
+
+		return_bytes+=pushnil(2)
+		return_bytes+=call_function(sel_option)
 		#导入选项目标到列表
 		sel_target.append(inputlist[-1])
 	elif inputlist[0]=='end':
 		now_offset=int(int(base_off)+length_now)
 		#l_selend=0
-		return_bytes+=b'\x02'
-		return_bytes+=sel_end
+		
+		return_bytes+=call_function(sel_end)
 		now_offset+=5
 		#选项后续判断
 		for i in range(1,op_num+1):
@@ -382,65 +504,39 @@ def bsset(inputlist):
 	#预期输入，[cha,pose,cloth,face,l,'l/m/r',z,x,y,lyr,alpha(?)]
 	#已知，前4个入参对应角色、姿势、服装、表情
 	bs_current=inputlist[:4]
-	return_bytes+=b'\x0c'
-	return_bytes+=int(inputlist[0]).to_bytes()
-	return_bytes+=b'\x0c'
-	return_bytes+=int(inputlist[1]).to_bytes()
-	return_bytes+=b'\x0c'
-	return_bytes+=int(inputlist[2]).to_bytes()
-	return_bytes+=b'\x0c'
-	return_bytes+=int(inputlist[3]).to_bytes()
+	for i_number in range(4):
+		return_bytes+=pushint(inputlist[i_number])
 	#接下来是自由入参，一共10个
 	#第一个是l，虽然不清楚具体含义，为0居多。
 	#为-10则，清除当前立绘，为 `0 / -1 / 1 / 2` = 四种不同构图状态
 	#似乎具体调用默认、L、U、S的文件名。0是L，1是U，2是S，-1默认
-	return_bytes+=b'\x0c'
-	if int(inputlist[4])>=0:
-		l_num = int(inputlist[4])
-		return_bytes+=l_num.to_bytes()
-	else:
-		l_num = int(inputlist[4])*(-1)
-		return_bytes+=l_num.to_bytes()
-		return_bytes+=b'\x19'
+	return_bytes+=pushint(inputlist[4])
 	#第二个自由入参为预设站位，0右1中2左
 	bslocation={'l':2,'m':1,'r':0}
-	loc_num=bslocation[inputlist[5]] #if inputlist[5] in bslocation else 1
-	return_bytes+=b'\x0c'
-	return_bytes+=loc_num.to_bytes()
+	if inputlist[5] in bslocation :
+		loc_num=bslocation[inputlist[5]] 
+	else:
+		loc_num=1
+	return_bytes+=pushint(loc_num)
 	#第三个自由入参，未知
 	return_bytes+=b'\x08'
 	#第四个入参，z，虽然我想取巧用默认值算了）
-	return_bytes+=b'\x0b'
-	return_bytes+=int(inputlist[6]).to_bytes(2,'little')
+	z_num=int(inputlist[6])
+	return_bytes+=pushint(z_num)
 	#第五第六个入参是x,y
 	x_num=int(inputlist[7])
-	return_bytes+=b'\x0b'
-	if x_num>=0:
-		return_bytes+=x_num.to_bytes(2,'little')
-	else:
-		x_num*=-1
-		return_bytes+=x_num.to_bytes(2,'little')
-		return_bytes+=b'\x19'
+	return_bytes+=pushint(x_num)
 	y_num=int(inputlist[8])
-	return_bytes+=b'\x0b'
-	if y_num>=0:
-		return_bytes+=y_num.to_bytes(2,'little')
-	else:
-		y_num*=-1
-		return_bytes+=y_num.to_bytes(2,'little')
-		return_bytes+=b'\x19'
+	return_bytes+=pushint(y_num)
 	#第七个入参，不明确
 	return_bytes+=b'\x08'
 	#第八个，控制层次
 	lyr_num=int(inputlist[9])
-	return_bytes+=b'\x0c'
-	return_bytes+=lyr_num.to_bytes()
+	return_bytes+=pushint(lyr_num)
 	#第九个，透明度。但我不想设置了
 	#第十个好像是第二层alpha，不管
 	return_bytes+=b'\x08\x08'
-	
-	return_bytes+=b'\x02'
-	return_bytes+=int(function_offset).to_bytes(4,'little')
+	return_bytes+=call_function(function_offset)
 	print(bs_current)
 	return(return_bytes)
 
@@ -500,7 +596,7 @@ def bgset(inputlist):
 		else:
 			#第八个入参为-1
 			return_bytes=b'\x08\x08\x08\x08\x08\x08\x08\x0c\x01\x19\x08\x08\x02'+bytes.fromhex(function_offset)[::-1]
-		return_bytes+=b'\x0C\x00\x0B\x20\x03\x08\x08\x08\x08\x08\x08\x08\x02\x5A\x11\x04\x00'
+		return_bytes+=effectset([0,1000])
 	return(return_bytes)
 
 def cgload(cgname):
@@ -531,77 +627,75 @@ def cgset(inputlist):
 		return b''
 	else:
 		#function_offset为十进制数的偏移
-		function_offset=cg_loaded[cgname]
+		function_offset=int(cg_loaded[cgname])
 	if len(inputlist)==5:
 		#不使用现有设定
 		return_bytes+=b'\x0c\x00'
-
-		xpos=int(inputlist[1])
 		#入参x
-		if xpos>=0:
-			return_bytes+=b'\x0b'
-			return_bytes+=xpos.to_bytes(2,'little')
-		else:
-			xpos_in=xpos*(-1)
-			return_bytes+=b'\x0b'
-			return_bytes+=xpos_in.to_bytes(2,'little')
-			return_bytes+=b'\x19'
-
-		ypos=int(inputlist[2])
+		xpos=int(inputlist[1])
+		return_bytes+=pusnint(xpos)
 		#入参y
-		if ypos>=0:
-			return_bytes+=b'\x0b'
-			return_bytes+=ypos.to_bytes(2,'little')
-		else:
-			ypos_in=ypos*(-1)
-			return_bytes+=b'\x0b'
-			return_bytes+=ypos_in.to_bytes(2,'little')
-			return_bytes+=b'\x19'
-
-		zoom=3000-int(float(inputlist[3])*1000)
-		#入参z
-		return_bytes+=b'\x0b'
-		return_bytes+=zoom.to_bytes(2,'little')
+		ypos=int(inputlist[2])
+		return_bytes+=pusnint(ypos)
+		#zoom=3000-int(float(inputlist[3])*1000)
+		zoom=int(inputlist[3])
+		#入参z，还是不当缩放处理好。默认的是2000为1倍
+		return_bytes+=pushint(zoom)
 		#入参rotate，我们不设置这一项
 		return_bytes+=b'\x08'
 	else:
 		#使用现有设定，于是xyz和rotate都raise nil
-		return_bytes+=b'\x08\x08\x08\x08\x08'
+		return_bytes+=pushnil(5)
 	timeset=int(inputlist[-1])
-	return_bytes+=b'\x0b'
-	return_bytes+=timeset.to_bytes(2,'little')
+	return_bytes+=pushint(timeset)
 	
-	return_bytes+=b'\x02'
-	return_bytes+=int(function_offset).to_bytes(4,'little')
+	return_bytes+=call_function(function_offset)
 	return(return_bytes)
 
-def diaset(inputstr):
-	function_offset='00038347'
-	try:
-		str_bytes=inputstr.encode(str_code)
-	except Exception as e:
-		raise(f'在“{inputstr}”中含有{str_code}不支持的字符')
-	length=len(str_bytes)+1
-	return_bytes=b'\x0E'+length.to_bytes()+str_bytes+b'\x00\x08\x08\x08\x08\x02'+bytes.fromhex(function_offset)[::-1]
+def diaset(inputlist):
+	function_offset=0x00038347
+	return_bytes=b''
+	return_bytes+=pushstr(str(inputlist[0]))
+	#第二入参，字号
+	input_2=pushint(int(inputlist[1])) if len(inputlist)>1 else b'\x08'
+	return_bytes+=input_2
+	#第三入参，逐字显示速度，这里我们先不改了
+	input_3=b'\x08'
+	return_bytes+=input_3
+	#第四入参，为1时不加括号
+	input_4=pushint(1) if len(inputlist)>2 else b'\x08'
+	return_bytes+=input_4
+	#第五入参，疑似记录undo进度？这里不管
+	return_bytes+=b'\x08'
+	return_bytes+=call_function(function_offset)
 	return (return_bytes)
 
 def msgset(inputtype):
 	return_bytes=b''
-	function_offset='000349f1'
+	function_offset=0x000349f1
+	function_box=0x000864F4
 	if inputtype=='middle':
-		return_bytes=b'\x0c\x01\x0c\x01\x19\x02'+bytes.fromhex(function_offset)[::-1]
+		return_bytes+=pushint(1)
+		return_bytes+=pushint(-1)
+		return_bytes+=call_function(function_offset)
 	elif inputtype=='normal':
+		return_bytes+=pushint(0)
+		return_bytes+=pushnil()
+		return_bytes+=call_function(function_offset)
 		#return_bytes+=b'\x0c\x00\x08\x02\xf4\x64\x08\x00'
-		return_bytes+=b'\x0c\x00\x08\x02'+bytes.fromhex(function_offset)[::-1]
+		#return_bytes+=b'\x0c\x00\x08\x02'+bytes.fromhex(function_offset)[::-1]
 		#0003b797，强制恢复对话栏的显示
-		return_bytes+=b'\x0c\x00\x02\x97\xb7\x03\x00'
+		#return_bytes+=b'\x0c\x00\x02\x97\xb7\x03\x00'
 	elif inputtype=='boxin':
 		#000864F4，此处大概是恢复对话框的入参(0,nil)
-		return_bytes+=b'\x0c\x00\x08\x02\xf4\x64\x08\x00'
+		return_bytes+=pushint(0)
+		return_bytes+=pushnil()
+		return_bytes+=call_function(function_box)
 	elif inputtype=='boxout':
 		#000864F4，此处是隐藏对话框的入参(1,-2)
-		return_bytes+=b'\x0c\x01\x0c\x02\x19\x02\xf4\x64\x08\x00'
-		#return_bytes+=b'\x0c\x00\x08\x02'+bytes.fromhex(function_offset)[::-1]
+		return_bytes+=pushint(1)
+		return_bytes+=pushint(-2)
+		return_bytes+=call_function(function_box)
 	else:
 		print('未定义对话栏位置或特殊操作')
 		#return None
@@ -609,38 +703,42 @@ def msgset(inputtype):
 	return (return_bytes)
 	
 def bgmset(inputint):
-	function_offset='00040552'
+	return_bytes=b''
+	function_offset=0x00040552
 	try:
 		bgmnum=int(inputint)
 	except Exception as e:
 		raise(f'不合规的入参，预期输入1-255之间的整数')
-	return_bytes=b'\x0c'+bgmnum.to_bytes()+b'\x08\x08\x08\x08\x02'+bytes.fromhex(function_offset)[::-1]
+	return_bytes+=pushint(bgmnum)
+	
+	return_bytes+=pushnil(4)
+	return_bytes+=call_function(function_offset)
+	
 	#print(return_bytes)
 	return(return_bytes)
 
 def seset(inputlist):
 	#预期输入[音效编号,(loop/end)或空,time]
 	return_bytes=b''
-	function_offset='0003FC08'
+	function_offset=0x0003FC08
+	#第一入参，音效编号
 	senum=int(inputlist[0])
-	return_bytes+=b'\x0b'
-	return_bytes+=senum.to_bytes(2,'little')
+	return_bytes+=pushint(senum)
 	if len(inputlist)>1:
+		#第三入参的判定，播放还是停止
 		if inputlist[1]=='loop':
 			return_bytes+=b'\x0c\x01\x08\x08'
-			return_bytes+=b'\x0b'
-			return_bytes+=int(inputlist[-1]).to_bytes(2,'little')
-			return_bytes+=b'\x02'
+			return_bytes+=pushint(inputlist[-1])
+			
 		elif inputlist[1]=='end':
-			return_bytes+=b'\x0b'
-			return_bytes+=int(inputlist[-1]).to_bytes(2,'little')
-			return_bytes+=b'\x0c\x00\x08\x08\x02'
+			return_bytes+=pushint(inputlist[-1])
+			return_bytes+=b'\x0c\x00\x08\x08'
 		else :
 			print('与预期输入不符，请检查')
 			return (b'')
 	else:
-		return_bytes+=b'\x08\x08\x08\x08\x02'
-	return_bytes+=bytes.fromhex(function_offset)[::-1]
+		return_bytes+=b'\x08\x08\x08\x08'
+	return_bytes+=call_function(function_offset)
 	return (return_bytes)
 
 
@@ -664,8 +762,9 @@ def line_to_hcb(script):
 				return_bytes+=cgset(inputlist[1:])
 				length_now+=len(cgset(inputlist[1:]))
 			elif inputlist[0]=='dia':
-				return_bytes+=diaset(inputlist[-1])
-				length_now+=len(diaset(inputlist[-1]))
+				result=diaset(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
 			elif inputlist[0]=='bgm':
 				return_bytes+=bgmset(inputlist[-1])
 				length_now+=len(bgmset(inputlist[-1]))
@@ -695,16 +794,46 @@ def line_to_hcb(script):
 				result=selset(inputlist[1:])
 				return_bytes+=result
 				length_now+=len(result)
+			elif inputlist[0]=='effect':
+				result=effectset(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='wait':
+				result=waitset(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='motion':
+				result=motionset(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='v3d':
+				result=v3dset(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='shake':
+				result=shakeset(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
 			elif inputlist[0]=='white':
 				#背景调白
-				return_bytes+=b'\x02\x67\x54\x00\x00\x0c\x00\x0b\xe8\x03\x08\x08\x08\x08\x08\x08\x08\x02\x5a\x11\x04\x00'
-				length_now+=22
+				return_bytes+=call_function(0x00005467)
+				length_now+=5
+				#return_bytes+=b'\x02\x67\x54\x00\x00\x0c\x00\x0b\xe8\x03\x08\x08\x08\x08\x08\x08\x08\x02\x5a\x11\x04\x00'
+				#length_now+=22
+			elif inputlist[0]=='black':
+				return_bytes+=call_function(0x00005423)
+				length_now+=5
 			elif inputlist[0]=='bgmstop':
 				return_bytes+=b'\x08\x02\x95\x06\x04\x00'
 				length_now+=6
 			elif inputlist[0]=='eyecatch':
 				return_bytes+=b'\x08\x08\x08\x08\x08\x02\x7B\x6E\x03\x00'
 				length_now+=10
+			elif inputlist[0]=='test':
+				result=eval(inputlist[-1])
+				print(f'testing result={result}')
+				return_bytes+=result
+				length_now+=len(result)
 			elif inputlist[0]=='cgload':
 				if isstart==0:
 					result=cgload(inputlist[-1])
@@ -725,8 +854,12 @@ def line_to_hcb(script):
 					print(cha_list)
 			elif inputlist[0]=='start':
 				isstart+=1
-				return_bytes+=header_bytes
-				length_now+=len(header_bytes)
+				#return_bytes+=header_bytes
+				#length_now+=len(header_bytes)
+				return_bytes+=b'\x01\x00\x00'
+				length_now+=3
+				return_bytes+=effectset([0,1000])
+				length_now+=len(effectset([0,1000]))
 			elif inputlist[0]=='end':
 				isend+=1
 				return_bytes+=ender_bytes
