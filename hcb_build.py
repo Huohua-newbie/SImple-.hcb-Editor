@@ -9,7 +9,7 @@ list_set={
 	'sel_start':['选项基底文字',''],
 	'sel':['选项内容','f_00057F2E'],
 	'sel_end':['选项结束标志','f_0005802C'],
-	'specialeffect':['特殊特效','f_0003DF65'],
+	'effect':['过场','f_0003DF65'],
 }
 
 base_off=0x0008AEC7
@@ -18,70 +18,76 @@ str_code='gbk'
 header_bytes=b'\x01\x00\x00\x0C\x00\x02\x39\x68\x03\x00\x0C\x01\x19\x0E\x03\xA1\xA1\x00\x02\x60\x68\x03\x00\x0E\x03\xA1\xA1\x00\x02\xD2\x8B\x03\x00\x0C\x02\x0C\x04\x0C\x01\x0C\x01\x08\x02\x7A\x67\x03\x00\x0C\x0D\x08\x08\x08\x08\x02\x7A\x67\x03\x00\x0C\x00\x0B\xE8\x03\x08\x08\x08\x08\x08\x08\x08\x02\x5A\x11\x04\x00'
 ender_bytes=b'\x0C\x00\x08\x02\xF1\x49\x03\x00\x0B\xE8\x03\x02\x95\x06\x04\x00\x02\x23\x54\x00\x00\x0C\x00\x0B\xE8\x03\x08\x08\x08\x08\x08\x08\x08\x02\x5A\x11\x04\x00\x0B\xDC\x05\x08\x08\x08\x08\x08\x08\x02\x74\x0E\x04\x00\x02\x49\x05\x04\x00\x02\x23\x54\x00\x00\x0C\x01\x08\x08\x02\x63\x0D\x04\x00\x04'
 bg_list={
-	1:['ゆめのねどこ·奥座敷','00005579'],
-	2:['ゆめのねどこ·店先','00005727'],
-	3:['ゆめのねどこ·店内','000059E2'],
-	4:['ゆめのねどこ·大雅の部屋','00005BA6'],
-	5:['ゆめのねどこ·魔法使いの工房','00005EC6'],
-	6:['ゆめのねどこ·店先·夜の国','000058F7'],
-	11:['桜ヶ丘学園·校門前','0000607C'],
-	12:['桜ヶ丘学園·大雅の教室','000063BB'],
-	13:['桜ヶ丘学園·時計塔の管理室','000066A3'],
-	14:['桜ヶ丘学園·一階廊下','00006A24'],
-	15:['桜ヶ丘学園·二階廊下','00006C15'],
-	16:['桜ヶ丘学園·一階廊下·夜の国','00006E06'],
-	17:['桜ヶ丘学園·二階廊下·夜の国','00006EFF'],
-	18:['桜ヶ丘学園·刻の終着駅·夜の国','00006FF8'],
-	21:['夜の遊園地·夜の国','00007111'],
-	23:['桜ヶ丘学園·校門前·夜の国','00006298'],
-	24:['桜ヶ丘学園·大雅の教室·夜の国','000065A8'],
-	25:['桜ヶ丘学園·時計塔の管理室·夜の国','000068F9'],
-	31:['千和のお店·店先','000071F4'],
-	32:['千和のお店·店内','000073C2'],
-	33:['千和のお店·千和の部屋','00007584'],
-	34:['千和のお店·父親の部屋','00007734'],
-	35:['千和のお店·廊下','000078E4'],
-	36:['千和のお店·店先·夜の国','00007A69'],
-	43:['夜月神社·社務所前','00007B52'],
-	44:['夜月神社·社務所前·夜の国','00007CFD'],
-	45:['夜月神社·石段','00007DF4'],
-	46:['夜月神社·石段·夜の国','00007F9B'],
-	51:['通学バスの中','0000808E'],
-	61:['参禅町·大通り','00008288'],
-	62:['参禅町·大通り·夜の国','0000846D'],
-	63:['参禅町·裏路地','00008560'],
-	64:['参禅町·裏路地·夜の国','00008707'],
-	65:['参禅町·大通り２','000087FA'],
-	66:['参禅町·大通り２·夜の国','000089E1'],
-	67:['参禅町·展望広場','00008AD6'],
-	68:['参禅町·展望広場·夜の国','00008C7F'],
-	71:['参禅町·公園','00009071'],
-	72:['参禅町·公園·夜の国','00009254'],
-	73:['参禅町·坂の道','f_00009345'],
-	74:['参禅町·坂の道·夜の国','000094EC'],
-	75:['参禅町·通学路','000095DF'],
-	76:['参禅町·通学路·夜の国','000097EA'],
-	81:['列車内','000098DD'],
-	82:['列車·客室車両','000099C1'],
-	83:['ナナちゃんの部屋','00009AA1'],
-	84:['扇形庫','00009B83'],
-	85:['列車·屋根','00009C5B'],
-	101:['空','00009D60'],
-	1010:['空（雨天）','00009ED7'],
-	102:['満月','0000A04E'],
-	103:['桜空','0000A124'],
-	105:['空·夜の国','0000A2C3'],
-	106:['満月·夜の国','0000A393'],
-	107:['桜空·夜の国','0000A483'],
-	110:['校舎見上げ','0000A555'],
-	112:['桜の木','0000A79D'],
-	113:['桜の木·夜の国','0000A924'],
-	200:['幻想の海','0000AABE'],
-	201:['海底','0000AB52'],
-	220:['闇','0000ABB8'],
-	230:['空·きな穴','0000AC3C'],
-	231:['空·きな穴２','0000ACCE'],
-	300:['砂漠','0000AA00'],
+	1:['ゆめのねどこ·奥座敷',0x00005579],
+	2:['ゆめのねどこ·店先',0x00005727],
+	3:['ゆめのねどこ·店内',0x000059E2],
+	4:['ゆめのねどこ·大雅の部屋',0x00005BA6,{11:100}],
+	5:['ゆめのねどこ·魔法使いの工房',0x00005EC6],
+	6:['ゆめのねどこ·店先·夜の国',0x000058F7],
+	11:['桜ヶ丘学園·校門前',0x0000607C],
+	12:['桜ヶ丘学園·大雅の教室',0x000063BB],
+	13:['桜ヶ丘学園·時計塔の管理室',0x000066A3],
+	14:['桜ヶ丘学園·一階廊下',0x00006A24],
+	15:['桜ヶ丘学園·二階廊下',0x00006C15],
+	16:['桜ヶ丘学園·一階廊下·夜の国',0x00006E06],
+	17:['桜ヶ丘学園·二階廊下·夜の国',0x00006EFF,{9:100}],
+	18:['桜ヶ丘学園·刻の終着駅·夜の国',0x00006FF8,{9:100}],
+	21:['夜の遊園地·夜の国',0x00007111],
+	23:['桜ヶ丘学園·校門前·夜の国',0x00006298],
+	24:['桜ヶ丘学園·大雅の教室·夜の国',0x000065A8],
+	25:['桜ヶ丘学園·時計塔の管理室·夜の国',0x000068F9,{9:100}],
+	31:['千和のお店·店先',0x000071F4],
+	32:['千和のお店·店内',0x000073C2],
+	33:['千和のお店·千和の部屋',0x00007584],
+	34:['千和のお店·父親の部屋',0x00007734,{9:100}],
+	35:['千和のお店·廊下',0x000078E4],
+	36:['千和のお店·店先·夜の国',0x00007A69],
+	43:['夜月神社·社務所前',0x00007B52,{9:100}],
+	44:['夜月神社·社務所前·夜の国',0x00007CFD],
+	45:['夜月神社·石段',0x00007DF4],
+	46:['夜月神社·石段·夜の国',0x00007F9B],
+	51:['通学バスの中',0x0000808E,{9:100}],
+	61:['参禅町·大通り',0x00008288],
+	62:['参禅町·大通り·夜の国',0x0000846D],
+	63:['参禅町·裏路地',0x00008560],
+	64:['参禅町·裏路地·夜の国',0x00008707],
+	65:['参禅町·大通り２',0x000087FA],
+	66:['参禅町·大通り２·夜の国',0x000089E1],
+	67:['参禅町·展望広場',0x00008AD6],
+	68:['参禅町·展望広場·夜の国',0x00008C7F,{9:100},{11:-1}],
+	71:['参禅町·公園',0x00009071],
+	72:['参禅町·公園·夜の国',0x00009254],
+	73:['参禅町·坂の道',0x00009345],
+	74:['参禅町·坂の道·夜の国',0x000094EC],
+	75:['参禅町·通学路',0x000095DF],
+	76:['参禅町·通学路·夜の国',0x000097EA],
+	81:['列車内',0x000098DD],
+	82:['列車·客室車両',0x000099C1],
+	83:['ナナちゃんの部屋',0x00009AA1],
+	84:['扇形庫',0x00009B83],
+	85:['列車·屋根',0x00009C5B,{9:100}],
+	101:['空',0x00009D60],
+	1010:['空（雨天）',0x00009ED7],
+	102:['満月',0x0000A04E],
+	103:['桜空',0x0000A124],
+	105:['空·夜の国',0x0000A2C3],
+	106:['満月·夜の国',0x0000A393,{9:100}],
+	107:['桜空·夜の国',0x0000A483,{11:1}],
+	110:['校舎見上げ',0x0000A555],
+	112:['桜の木',0x0000A79D,{9:100}],
+	113:['桜の木·夜の国',0x0000A924,{9:100}],
+	200:['幻想の海',0x0000AABE],
+	201:['海底',0x0000AB52],
+	220:['闇',0x0000ABB8],
+	230:['空·きな穴',0x0000AC3C],
+	231:['空·きな穴２',0x0000ACCE],
+	300:['砂漠',0x0000AA00],
+}
+#11个入参的那些
+bg_list2={
+	4:['ゆめのねどこ·大雅の部屋',0x00005BA6],
+	68:['参禅町·展望広場·夜の国',0x00008C7F],
+	107:['桜空·夜の国',0x0000A483],
 }
 length_now=0
 isstart=0
@@ -106,6 +112,16 @@ cha_list={
 	'女孩子':[0x00000AB0,'女孩子',{}],
 	'大雅':[0x00001784,'大雅',{'奏大雅':10}],
 }
+
+def debughex(value):
+	n = int(value)
+	if n < 0:
+		raise ValueError("不支持负数")
+	if n == 0:
+		return b'\x00'
+	length = (n.bit_length() + 7) // 8
+	return n.to_bytes(length, 'big')
+	
 #0x0E的模仿
 def pushstr(inputtext):
 	return_bytes=b''
@@ -142,16 +158,27 @@ def pushint(inputint):
 		return(return_bytes)
 	return_bytes+=m_add
 	return(return_bytes)
-
+#0x0F，以全局变量为入参
+def pushglobal(n):
+	return_bytes=b''
+	iint=int(n)
+	if 0<=iint<32767:
+		return_bytes+=b'\x0F'
+		return_bytes+=iint.to_bytes(2,'little')
+	else:
+		print('数字过大')
+	return (return_bytes)
 #0x02
 def call_function(input_function_off):
-	return_bytes=b'\x02'
+	return_bytes=b''
+	
 	if type(input_function_off)==str :
 		func_off=int(input_function_off,16)
 	elif type(input_function_off)==int:
 		func_off=input_function_off
 	else:
 		print('输入类型错误')
+	return_bytes+=b'\x02'
 	return_bytes+=func_off.to_bytes(4,'little')
 	return(return_bytes)
 #连续写入0x08
@@ -164,7 +191,7 @@ def pushnil(n=1):
 	return_bytes=nil_bytes*nil_num
 	return(return_bytes)
 	
-#0x15，写入入参
+#0x15，写入全局变量
 def popglobal(n):
 	return_bytes=b''
 	try:
@@ -174,6 +201,7 @@ def popglobal(n):
 	return_bytes+=b'\x15'
 	return_bytes+=global_num.to_bytes(2,'little')
 	return(return_bytes)
+
 
 def bs_ani(inputlist):
 	#立绘图小动作，5入参，第一入参确定具体动哪个立绘
@@ -218,7 +246,7 @@ def v3dset(inputlist):
 		return_bytes+=call_function(function_fast_offset)
 	else:
 		try:
-			return_bytes+=pushint(int(inputlist[i]))
+			return_bytes+=pushint(int(inputlist[-1]))
 		except Exception as e:
 			return_bytes+=pushnil()
 		#后续8个入参，此处全部按0x08
@@ -260,9 +288,10 @@ def effectset(inputlist):
 	return_bytes=b''
 	function_offset=0x0004115A
 	#转场特效，需求入参9个，第一入参为编号
-	return_bytes+=pushint(int(inputlist[0]))
+	input_1=int(inputlist[0]) if len(inputlist)>1 else 0
+	return_bytes+=pushint(input_1)
 	#第二入参时长设定
-	return_bytes+=pushint(int(inputlist[1]))
+	return_bytes+=pushint(int(inputlist[-1]))
 	#后面7个入参都按0x08好了
 	return_bytes+=pushnil(7)
 	return_bytes+=call_function(function_offset)
@@ -459,7 +488,7 @@ def jmpreplace(inputbytes):
 			inputbytes=inputbytes.replace(jmp_tem[i],jmp_real[i])
 	
 	return (inputbytes)
-
+#手动注册CG列表
 with open('base/cg_loaded.txt') as f:
 	lines = [line.strip() for line in f if line.strip()]
 cg_loaded = {lines[i+1].strip('"').upper(): int(lines[i],16) for i in range(0, len(lines), 2)}
@@ -584,19 +613,80 @@ def chaset(inputlist):
 	return_bytes+=function_offset.to_bytes(4,'little')
 	return (return_bytes)
 
-
+def bgload(inputlist):
+	global bg_list
+	#预期输入[bgload,bgnum,filename,可选bgname]
+	return_bytes=b''
+	bg_num=int(inputlist[0])
+	filename=inputlist[1]
+	bg_name=inputlist[-1] if len(inputlist)>2 else f'编号{bg_num}新加入背景'
+	#注册编号
+	if int(inputlist[0]) in bg_list:
+		print(f'背景编号{inputlist[0]}被占用')
+		return b''
+	else:
+		function_hex=int(int(base_off)+length_now)
+		inputlist=[]
+		inputlist.append(bg_name)
+		inputlist.append(function_hex)
+		bg_list[bg_num]=inputlist
+	#函数初始化并为第四入参设定部分做准备
+	tar_off=function_hex
+	return_bytes+=b'\x01\x0A\x00'
+	tar_off+=3
+	#初始化之后，首先设置全局变量1255为0，pushnil2的情况下callfunction一次
+	return_bytes+=pushint(0)
+	return_bytes+=popglobal(1255)
+	return_bytes+=pushnil(2)
+	return_bytes+=call_function(0x0000BAA9)
+	tar_off+=12
+	#第四入参，为空预设为800
+	return_bytes+=b'\x10\xF8'
+	return_bytes+=pushnil()
+	return_bytes+=b'\x22'
+	tem_tar=f'::bg{bg_num}_loading'
+	return_bytes+=jmpset(['jz',tem_tar])
+	return_bytes+=pushint(800)
+	return_bytes+=b'\x16\xF8'
+	tar_off+=14
+	label_load(tem_tar,tar_off)
+	#之后是第六第九入参等的判断，后续不需要所以我们跳过
+	#以及第八入参为-1的判断，由于我们这里搞成单图背景输入，所以也不管
+	#写入文件名，将其赋值到G[63]
+	return_bytes+=pushstr(filename)
+	return_bytes+=popglobal(63)
+	#背景图及模糊版本的写入
+	return_bytes+=b'\x0F\x3F\x00\x08\x0C\x32\x10\xF5\x10\xF6\x10\xF7\x10\xF8\x10\xF9'
+	return_bytes+=call_function(0x0003BB96)
+	
+	return_bytes+=b'\x0F\x3F\x00\x0E\x02\x62\x00\x1A\x15\x3F\x00\x0F\x3F\x00\x08\x0C\x32\x10\xF5\x10\xF6\x10\xF7\x10\xF8\x10\xF9'
+	return_bytes+=call_function(0x0003BCA3)
+	return_bytes+=b'\x04\x04'
+	#print(bg_list)
+	return(return_bytes)
+	
 
 def bgset(inputlist):
-	if int(inputlist[0]) in bg_list:
-		function_offset=bg_list[int(inputlist[0])][-1]
-		if len(inputlist)>1:
-			bg_num=int(inputlist[-1])
-			#第七个入参控制具体细分
-			return_bytes=b'\x08\x08\x08\x08\x08\x08'+b'\x0c'+bg_num.to_bytes()+b'\x08\x08\x08\x02'+bytes.fromhex(function_offset)[::-1]
-		else:
-			#第八个入参为-1
-			return_bytes=b'\x08\x08\x08\x08\x08\x08\x08\x0c\x01\x19\x08\x08\x02'+bytes.fromhex(function_offset)[::-1]
-		return_bytes+=effectset([0,1000])
+	return_bytes=b''
+	return_bytes+=pushnil(6)
+	#10入参
+	function_offset=bg_list[int(inputlist[0])][1] #if int(inputlist[0]) in bg_list else 0x00008AD6
+	if len(inputlist)>1:
+		bg_num=int(inputlist[1])
+		#暂时用第七个入参基本具体细分
+		return_bytes+=pushint(bg_num)
+		return_bytes+=pushnil(3)
+	else:
+		#第八个入参为-1
+		return_bytes+=pushnil()
+		return_bytes+=pushint(-1)
+		return_bytes+=pushnil(2)
+	if int(inputlist[0]) in bg_list2:
+		#11入参
+		return_bytes+=pushnil()
+	return_bytes+=call_function(function_offset)
+
+	return_bytes+=effectset([0,1000])
 	return(return_bytes)
 
 def cgload(cgname):
@@ -605,15 +695,10 @@ def cgload(cgname):
 	if realcgname in cg_loaded:
 		print(f'{cgname} is loaded.')
 	else:
-		try:
-			cgname_bytes=realcgname.encode(str_code)
-		except Exception as e:
-			raise(f'在“{cgname}”中含有{str_code}不支持的字符')
-		length=len(cgname_bytes)+1
-		return_bytes+=b'\x01\x06\x00\x02\xAC\x51\x00\x00\x0E'
-		return_bytes+=length.to_bytes()
-		return_bytes+=cgname_bytes
-		return_bytes+=b'\x00\x10\xF9\x0C\x01\x08\x10\xFA\x10\xFB\x10\xFC\x10\xFD\x08\x08\x02\x6A\xC8\x03\x00\x08\x08\x10\xFE\x02\xD3\x51\x00\x00\x04'
+		#函数初始化
+		return_bytes+=b'\x01\x06\x00\x02\xAC\x51\x00\x00'
+		return_bytes+=pushstr(realcgname)
+		return_bytes+=b'\\x10\xF9\x0C\x01\x08\x10\xFA\x10\xFB\x10\xFC\x10\xFD\x08\x08\x02\x6A\xC8\x03\x00\x08\x08\x10\xFE\x02\xD3\x51\x00\x00\x04'
 		
 	return (return_bytes)
 
@@ -626,17 +711,17 @@ def cgset(inputlist):
 		print(f'{cgname} is not loaded.')
 		return b''
 	else:
-		#function_offset为十进制数的偏移
+		#function_offset为int类型的偏移
 		function_offset=int(cg_loaded[cgname])
 	if len(inputlist)==5:
 		#不使用现有设定
 		return_bytes+=b'\x0c\x00'
 		#入参x
 		xpos=int(inputlist[1])
-		return_bytes+=pusnint(xpos)
+		return_bytes+=pushint(xpos)
 		#入参y
 		ypos=int(inputlist[2])
-		return_bytes+=pusnint(ypos)
+		return_bytes+=pushint(ypos)
 		#zoom=3000-int(float(inputlist[3])*1000)
 		zoom=int(inputlist[3])
 		#入参z，还是不当缩放处理好。默认的是2000为1倍
@@ -753,9 +838,6 @@ def line_to_hcb(script):
 		#return_bytes+=header_bytes
 	for i,line in enumerate(lst):
 		print(i)
-		#print(line_to_hcb(line))
-		#return_bytes+=line_to_hcb(line)
-	
 		if line.startswith('[') and line[0]!='#':
 			inputlist=line[1:len(line)-2].split(',')
 			if inputlist[0]=='cg':
@@ -852,6 +934,12 @@ def line_to_hcb(script):
 					length_now+=len(result)
 					new_off+=len(result)
 					print(cha_list)
+			elif inputlist[0]=='bgload':
+				if isstart==0:
+					result=bgload(inputlist[1:])
+					return_bytes+=result
+					length_now+=len(result)
+					new_off+=len(result)
 			elif inputlist[0]=='start':
 				isstart+=1
 				#return_bytes+=header_bytes
@@ -874,7 +962,7 @@ def line_to_hcb(script):
 			continue
 	#return_bytes+=ender_bytes
 
-length_now=0
+#length_now=0
 if __name__ == '__main__':
 	return_bytes=b''
 	#isstart=0
