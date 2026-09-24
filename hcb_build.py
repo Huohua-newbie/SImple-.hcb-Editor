@@ -202,6 +202,60 @@ def popglobal(n):
 	return_bytes+=global_num.to_bytes(2,'little')
 	return(return_bytes)
 
+def bs_move(inputlist):
+	#立绘移动。9入参
+	return_bytes=b''
+	function_offset=0x00053FAA
+	cha_num=int(inputlist[0])
+	dx=int(inputlist[1])
+	dy=int(inputlist[2])
+	#z=int(inputlist[3])
+	#rotation=int(inputlist[4])
+	time_num=int(inputlist[-1])
+	#第一入参立绘编号
+	return_bytes+=pushint(cha_num)
+	#第二入参水平方向移动距离
+	return_bytes+=pushint(dx)
+	#第三入参垂直方向移动距离
+	return_bytes+=pushint(dy)
+	#第四入参，如果有则改变z坐标，否则pushnil
+	return_bytes+=pushint(int(inputlist[3])) if len(inputlist)==5 else pushnil()
+	#旋转参数忽略
+	return_bytes+=pushnil()
+	#第六入参时间
+	return_bytes+=pushint(time_num)
+	return_bytes+=pushnil(3)
+	return_bytes+=call_function(function_offset)
+	return(return_bytes)
+
+def bs_fade(inputlist):
+	return_bytes=b''
+	function_offset=0x0004B758
+	cha_num=int(inputlist[0])
+	return_bytes+=pushint(cha_num)
+	#第二入参离场模式
+	#已知：1右2左3下4上，够用了
+	return_bytes+=pushint(int(inputlist[1])) if len(inputlist)>1 else pushnil()
+	return_bytes+=call_function(function_offset)
+	return (return_bytes)
+
+def bs_color(inputlist):
+	#立绘图颜色。入参理论上应该是chanum,r,g,b
+	#不能实时修改
+	return_bytes=b''
+	function_offset=0x00055296
+	
+	cha_num=int(inputlist[0])
+	r=int(inputlist[1])
+	g=int(inputlist[2])
+	b=int(inputlist[3])
+
+	return_bytes+=pushint(cha_num)
+	return_bytes+=pushint(r)
+	return_bytes+=pushint(g)
+	return_bytes+=pushint(b)
+	return_bytes+=call_function(function_offset)
+	return (return_bytes)
 
 def bs_ani(inputlist):
 	#立绘图小动作，5入参，第一入参确定具体动哪个立绘
@@ -502,22 +556,13 @@ def bsfade():
 	return_bytes=b''
 	inputlist=bs_current 
 	#function_offset=0x00043F97
+	#4b766?
 	if inputlist!=[]:
 		print(inputlist)
 		
 		#return_bytes+=b'\x0c\x00\x0c\x00\x0b\x5e\x01\x0b\x26\x02\x08\x08\x08\x08\x08\x08\x08\x08\x02\xa3\x26\x05\x00'
 		return_bytes+=b'\x08\x08\x02\xa9\xba\x00\x00'
-		#return_bytes+=b'\x0c'
-		#return_bytes+=int(inputlist[0]).to_bytes()
-		#return_bytes+=b'\x0c'
-		#return_bytes+=int(inputlist[1]).to_bytes()
-		#return_bytes+=b'\x0c'
-		#return_bytes+=int(inputlist[2]).to_bytes()
-		#return_bytes+=b'\x0c'
-		#return_bytes+=int(inputlist[3]).to_bytes()
-		#return_bytes+=b'\x08\x08\x08\x08\x08\x08\x08\x08\x08\x08'
-		#return_bytes+=b'\x02'
-		#return_bytes+=int(function_offset).to_bytes(4,'little')
+
 		bs_current=[]
 		print(bs_current)
 		return(return_bytes)
@@ -869,6 +914,22 @@ def line_to_hcb(script):
 				bsfade_result=bsfade()
 				return_bytes+=bsfade_result
 				length_now+=len(bsfade_result)
+			elif inputlist[0]=='bs_ani':
+				result=bs_ani(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='bs_color':
+				result=bs_color(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='bs_fade':
+				result=bs_fade(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='bs_move':
+				result=bs_move(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
 			elif inputlist[0]=='jump':
 				return_bytes+=jmpset(inputlist)
 				length_now+=len(jmpset(inputlist))
