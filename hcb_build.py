@@ -268,6 +268,26 @@ def bs_ani(inputlist):
 	return_bytes+=call_function(function_offset)
 	return (return_bytes)
 
+def eyecatch(inputlist):
+	#体验版里有6个槽位，但锁死了。有想法的自行修改即可
+	return_bytes=b''
+	function_offset=0x00036E7B
+	ec_dic={1:[1000,0],2:[1000,1],3:[1001,0],4:[1001,1],5:[0,0],6:[0,1]}
+	try:
+		ec_num=int(inputlist[0])
+		if ec_num in ec_dic:
+			return_bytes+=pushint(ec_dic[ec_num][0])
+			return_bytes+=pushnil()
+			return_bytes+=pushint(ec_dic[ec_num][1])
+			return_bytes+=pushnil(2)
+			return_bytes+=call_function(function_offset)
+		else:
+			return_bytes+=pushnil(5)
+			return_bytes+=call_function(function_offset)
+	except Exception as e:
+		return_bytes+=pushnil(5)
+		return_bytes+=call_function(function_offset)
+	return(return_bytes)
 
 def shakeset(inputlist):
 	#抖动，预期输入[shake,num,mode,width]
@@ -345,7 +365,8 @@ def effectset(inputlist):
 	input_1=int(inputlist[0]) if len(inputlist)>1 else 0
 	return_bytes+=pushint(input_1)
 	#第二入参时长设定
-	return_bytes+=pushint(int(inputlist[-1]))
+	time_n=int(inputlist[-1]) if len(inputlist)!=0 else 1000
+	return_bytes+=pushint(time_n)
 	#后面7个入参都按0x08好了
 	return_bytes+=pushnil(7)
 	return_bytes+=call_function(function_offset)
@@ -535,7 +556,7 @@ def jmpreplace(inputbytes):
 	global return_bytes
 	for i in jmp_tem:
 		if i not in jmp_real:
-			print('有未定义的jump目标')
+			print(f'有未定义的jump目标：{i}')
 			break
 		else:
 			print(jmp_real[i])
@@ -580,36 +601,42 @@ def bsset(inputlist):
 	bs_current=inputlist[:4]
 	for i_number in range(4):
 		return_bytes+=pushint(inputlist[i_number])
-	#接下来是自由入参，一共10个
-	#第一个是l，虽然不清楚具体含义，为0居多。
-	#为-10则，清除当前立绘，为 `0 / -1 / 1 / 2` = 四种不同构图状态
-	#似乎具体调用默认、L、U、S的文件名。0是L，1是U，2是S，-1默认
-	return_bytes+=pushint(inputlist[4])
-	#第二个自由入参为预设站位，0右1中2左
-	bslocation={'l':2,'m':1,'r':0}
-	if inputlist[5] in bslocation :
-		loc_num=bslocation[inputlist[5]] 
+	if len(inputlist)==4:
+		return_bytes+=pushnil(10)
 	else:
-		loc_num=1
-	return_bytes+=pushint(loc_num)
-	#第三个自由入参，未知
-	return_bytes+=b'\x08'
-	#第四个入参，z，虽然我想取巧用默认值算了）
-	z_num=int(inputlist[6])
-	return_bytes+=pushint(z_num)
-	#第五第六个入参是x,y
-	x_num=int(inputlist[7])
-	return_bytes+=pushint(x_num)
-	y_num=int(inputlist[8])
-	return_bytes+=pushint(y_num)
-	#第七个入参，不明确
-	return_bytes+=b'\x08'
-	#第八个，控制层次
-	lyr_num=int(inputlist[9])
-	return_bytes+=pushint(lyr_num)
-	#第九个，透明度。但我不想设置了
-	#第十个好像是第二层alpha，不管
-	return_bytes+=b'\x08\x08'
+		#接下来是自由入参，一共10个
+		#第一个是l，虽然不清楚具体含义，为0居多。
+		#为-10则，用小头像，为 `0 / -1 / 1 / 2` = 四种不同构图状态
+		#似乎具体调用默认、L、U、S的文件名。0是L，1是U，2是S，-1默认
+		return_bytes+=pushint(inputlist[4])
+		if int(inputlist[4])==-10:
+			return_bytes+=pushnil(9)
+		else:
+			#第二个自由入参为预设站位，0右1中2左
+			bslocation={'l':2,'m':1,'r':0}
+			if inputlist[5] in bslocation :
+				loc_num=bslocation[inputlist[5]] 
+			else:
+				loc_num=1
+			return_bytes+=pushint(loc_num)
+			#第三个自由入参，未知
+			return_bytes+=pushnil()
+			#第四个入参，z，虽然我想取巧用默认值算了）
+			z_num=int(inputlist[6])
+			return_bytes+=pushint(z_num)
+			#第五第六个入参是x,y
+			x_num=int(inputlist[7])
+			return_bytes+=pushint(x_num)
+			y_num=int(inputlist[8])
+			return_bytes+=pushint(y_num)
+			#第七个入参，不明确
+			return_bytes+=pushnil()
+			#第八个，控制层次
+			lyr_num=int(inputlist[9])
+			return_bytes+=pushint(lyr_num)
+			#第九个，透明度。但我不想设置了
+			#第十个好像是能力差分？
+			return_bytes+=pushnil(2)
 	return_bytes+=call_function(function_offset)
 	print(bs_current)
 	return(return_bytes)
@@ -715,7 +742,7 @@ def bgset(inputlist):
 	return_bytes=b''
 	return_bytes+=pushnil(6)
 	#10入参
-	function_offset=bg_list[int(inputlist[0])][1] #if int(inputlist[0]) in bg_list else 0x00008AD6
+	function_offset=bg_list[int(inputlist[0])][1] 
 	if len(inputlist)>1:
 		bg_num=int(inputlist[1])
 		#暂时用第七个入参基本具体细分
@@ -731,7 +758,7 @@ def bgset(inputlist):
 		return_bytes+=pushnil()
 	return_bytes+=call_function(function_offset)
 
-	return_bytes+=effectset([0,1000])
+	#return_bytes+=effectset([0,1000])
 	return(return_bytes)
 
 def cgload(cgname):
@@ -743,7 +770,7 @@ def cgload(cgname):
 		#函数初始化
 		return_bytes+=b'\x01\x06\x00\x02\xAC\x51\x00\x00'
 		return_bytes+=pushstr(realcgname)
-		return_bytes+=b'\\x10\xF9\x0C\x01\x08\x10\xFA\x10\xFB\x10\xFC\x10\xFD\x08\x08\x02\x6A\xC8\x03\x00\x08\x08\x10\xFE\x02\xD3\x51\x00\x00\x04'
+		return_bytes+=b'\x10\xF9\x0C\x01\x08\x10\xFA\x10\xFB\x10\xFC\x10\xFD\x08\x08\x02\x6A\xC8\x03\x00\x08\x08\x10\xFE\x02\xD3\x51\x00\x00\x04'
 		
 	return (return_bytes)
 
@@ -787,12 +814,16 @@ def diaset(inputlist):
 	return_bytes=b''
 	return_bytes+=pushstr(str(inputlist[0]))
 	#第二入参，字号
-	input_2=pushint(int(inputlist[1])) if len(inputlist)>1 else b'\x08'
+	try:
+		input_2=pushint(int(inputlist[1]))
+	except Exception as e:
+		input_2=pushnil()
 	return_bytes+=input_2
 	#第三入参，逐字显示速度，这里我们先不改了
-	input_3=b'\x08'
+	input_3=pushnil()
 	return_bytes+=input_3
 	#第四入参，为1时不加括号
+	
 	input_4=pushint(1) if len(inputlist)>2 else b'\x08'
 	return_bytes+=input_4
 	#第五入参，疑似记录undo进度？这里不管
@@ -844,8 +875,18 @@ def bgmset(inputint):
 	return_bytes+=pushnil(4)
 	return_bytes+=call_function(function_offset)
 	
-	#print(return_bytes)
 	return(return_bytes)
+
+def bgmstop(inputint):
+	return_bytes=b''
+	function_offset=0x00040695
+	try:
+		time_set=int(inputint)
+		return_bytes+=pushint(time_set)
+	except Exception as e:
+		return_bytes+=pushnil()
+	return_bytes+=call_function(function_offset)
+	return (return_bytes)
 
 def seset(inputlist):
 	#预期输入[音效编号,(loop/end)或空,time]
@@ -961,17 +1002,30 @@ def line_to_hcb(script):
 				#背景调白
 				return_bytes+=call_function(0x00005467)
 				length_now+=5
-				#return_bytes+=b'\x02\x67\x54\x00\x00\x0c\x00\x0b\xe8\x03\x08\x08\x08\x08\x08\x08\x08\x02\x5a\x11\x04\x00'
-				#length_now+=22
 			elif inputlist[0]=='black':
 				return_bytes+=call_function(0x00005423)
 				length_now+=5
 			elif inputlist[0]=='bgmstop':
-				return_bytes+=b'\x08\x02\x95\x06\x04\x00'
-				length_now+=6
+				if len(inputlist)==1:
+					return_bytes+=pushnil()
+					return_bytes+=call_function(0x00040695)
+					length_now+=6
+				else:
+					result=bgmstop(inputlist[1])
+					return_bytes+=result
+					length_now+=len(result)
 			elif inputlist[0]=='eyecatch':
-				return_bytes+=b'\x08\x08\x08\x08\x08\x02\x7B\x6E\x03\x00'
-				length_now+=10
+				if len(inputlist)==1:
+					return_bytes+=pushnil(5)
+					return_bytes+=call_function(0x00036E7B)
+					length_now+=10
+				else:
+					result=eyecatch(inputlist[1:])
+					return_bytes+=result
+					length_now+=len(result)
+			elif inputlist[0]=='movie':
+				return_bytes+=call_function(0x0008ABDA)
+				length_now+=5
 			elif inputlist[0]=='test':
 				result=eval(inputlist[-1])
 				print(f'testing result={result}')
