@@ -202,6 +202,45 @@ def popglobal(n):
 	return_bytes+=global_num.to_bytes(2,'little')
 	return(return_bytes)
 
+fogged=0
+def fog():
+	global fogged
+	return_bytes=b''
+	function_offset=0x00086604
+	if fogged==0:
+		return_bytes+=pushint(1)
+		fogged=1
+	else:
+		return_bytes+=pushnil()
+		fogged=0
+	return_bytes+=call_function(function_offset)
+	return(return_bytes)
+
+def endback(num):
+	#fin效果
+	return_bytes=b''
+	function_offset=0x000821BE
+	return_bytes+=pushint(num)
+	return_bytes+=call_function(function_offset)
+	return (return_bytes)
+
+def snow_effect(in_put):
+	#粒子特效
+	return_bytes=b''
+	function_offset=0x00057470
+	stop_offset=0x000574A1
+	try:
+		#正常显示
+		num=int(in_put)
+		return_bytes+=pushint(num)
+		return_bytes+=pushnil()
+		return_bytes+=call_function(function_offset)
+	except Exception as e:
+		#停止方法
+		return_bytes+=pushnil()
+		return_bytes+=call_function(stop_offset)
+	return (return_bytes)
+
 def bs_move(inputlist):
 	#立绘移动。9入参
 	return_bytes=b''
@@ -564,9 +603,12 @@ def jmpreplace(inputbytes):
 	
 	return (inputbytes)
 #手动注册CG列表
-with open('base/cg_loaded.txt') as f:
-	lines = [line.strip() for line in f if line.strip()]
-cg_loaded = {lines[i+1].strip('"').upper(): int(lines[i],16) for i in range(0, len(lines), 2)}
+try:
+	with open('base/cg_loaded.txt') as f:
+		lines = [line.strip() for line in f if line.strip()]
+	cg_loaded = {lines[i+1].strip('"').upper(): int(lines[i],16) for i in range(0, len(lines), 2)}
+except Exception as e:
+	cg_loaded={}
 
 
 
@@ -803,7 +845,7 @@ def cgset(inputlist):
 	else:
 		#使用现有设定，于是xyz和rotate都raise nil
 		return_bytes+=pushnil(5)
-	timeset=int(inputlist[-1])
+	timeset=int(inputlist[-1]) if type(inputlist[-1])==int else 1000
 	return_bytes+=pushint(timeset)
 	
 	return_bytes+=call_function(function_offset)
@@ -895,20 +937,26 @@ def seset(inputlist):
 	#第一入参，音效编号
 	senum=int(inputlist[0])
 	return_bytes+=pushint(senum)
+	
 	if len(inputlist)>1:
 		#第三入参的判定，播放还是停止
 		if inputlist[1]=='loop':
-			return_bytes+=b'\x0c\x01\x08\x08'
+			#第四入参音量
+			volumn=pushint(inputlist[-2]) if len(inputlist)==4 else pushnil()
+			return_bytes+=pushint(1)
+			return_bytes+=pushnil()
+			return_bytes+=volumn
 			return_bytes+=pushint(inputlist[-1])
 			
 		elif inputlist[1]=='end':
 			return_bytes+=pushint(inputlist[-1])
-			return_bytes+=b'\x0c\x00\x08\x08'
+			return_bytes+=pushint(0)
+			return_bytes+=pushnil(2)
 		else :
 			print('与预期输入不符，请检查')
 			return (b'')
 	else:
-		return_bytes+=b'\x08\x08\x08\x08'
+		return_bytes+=pushnil(4)
 	return_bytes+=call_function(function_offset)
 	return (return_bytes)
 
@@ -949,8 +997,9 @@ def line_to_hcb(script):
 				return_bytes+=chaset(inputlist[1:])
 				length_now+=len(chaset(inputlist[1:]))
 			elif inputlist[0]=='bs':
-				return_bytes+=bsset(inputlist[1:])
-				length_now+=len(bsset(inputlist[1:]))
+				result=bsset(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
 			elif inputlist[0]=='bsfade':
 				bsfade_result=bsfade()
 				return_bytes+=bsfade_result
@@ -1026,6 +1075,14 @@ def line_to_hcb(script):
 			elif inputlist[0]=='movie':
 				return_bytes+=call_function(0x0008ABDA)
 				length_now+=5
+			elif inputlist[0]=='snow':
+				result=snow_effect(inputlist[-1])
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='endback':
+				result=endback(inputlist[1])
+				return_bytes+=result
+				length_now+=len(result)
 			elif inputlist[0]=='test':
 				result=eval(inputlist[-1])
 				print(f'testing result={result}')
@@ -1039,8 +1096,8 @@ def line_to_hcb(script):
 					cg_loaded[inputlist[-1].upper()]=cg_offset
 					length_now+=len(result)
 					new_off+=len(result)
-					print(cg_loaded[inputlist[-1].upper()])
-					print(inputlist[-1].upper())
+					print(cg_loaded)
+					
 			elif inputlist[0]=='chaload':
 				if isstart==0:
 					result=chaload(inputlist[1:])
