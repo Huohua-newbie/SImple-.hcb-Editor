@@ -181,6 +181,10 @@ def call_function(input_function_off):
 	return_bytes+=b'\x02'
 	return_bytes+=func_off.to_bytes(4,'little')
 	return(return_bytes)
+
+def pushtrue():
+	return(b'\x09')
+
 #连续写入0x08
 def pushnil(n=1):
 	try:
@@ -200,6 +204,39 @@ def popglobal(n):
 		raise(f'需要写入一个整数，当前写入内容为{n}')
 	return_bytes+=b'\x15'
 	return_bytes+=global_num.to_bytes(2,'little')
+	return(return_bytes)
+	
+def global_set(global_num,n=0):
+	#写入全局变量
+	return_bytes=b''
+	if type(n) == int:
+		return_bytes+=pushint(n)
+	elif n =='nil' :
+		return_bytes+=pushnil()
+	elif n == 'true':
+		return_bytes+=pushtrue()
+	else:
+		return_bytes+=pushnil()
+	return_bytes+=popglobal(global_num)
+	return(return_bytes)
+
+basic_input={
+	'Nil':'pushnil()',
+	'True':'pushtrue()',
+	'int':'pushint()',
+	'str':'pushstr()'
+	}
+def global_eq(global_num,in_put,jztarget):
+	#全局变量比对指定量，并进行跳转
+	return_bytes=b''
+	if in_put == 'nil':
+		return_bytes+=pushnil()
+	else:
+		return_bytes+=pushint(int(in_put))
+	
+	return_bytes+=pushglobal(global_num)
+	return_bytes+=b'\x22'
+	return_bytes+=jmpset(['jz',jztarget])
 	return(return_bytes)
 
 fogged=0
@@ -1083,8 +1120,21 @@ def line_to_hcb(script):
 				result=endback(inputlist[1])
 				return_bytes+=result
 				length_now+=len(result)
+			elif inputlist[0]=='fog':
+				result=fog()
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='global_set':
+				result=global_set(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='global_eq':
+				result=global_eq(inputlist[1:])
+				return_bytes+=result
+				length_now+=len(result)
 			elif inputlist[0]=='test':
-				result=eval(inputlist[-1])
+				testing_input=line[1:len(line)-2].split(',',1)
+				result=eval(testing_input[-1])
 				print(f'testing result={result}')
 				return_bytes+=result
 				length_now+=len(result)
