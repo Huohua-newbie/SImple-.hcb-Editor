@@ -122,6 +122,45 @@ def debughex(value):
 	length = (n.bit_length() + 7) // 8
 	return n.to_bytes(length, 'big')
 	
+
+#0x03syscall
+base_hcb='base/base.chb'
+#写入syscall表
+with open(base_hcb,'rb') as basehcb:
+	data=basehcb.read()
+	a=data[0:4]
+	a_num=int.from_bytes(a,'little')
+	offset=a_num+10
+	title_length=data[offset]
+	offset+=(title_length+1)
+	syscall_count=int.from_bytes(data[offset:offset+2],'little')
+	offset+=2
+	syscall_list=[]
+	for _ in range(syscall_count):
+		offset += 1
+		name_length = data[offset]
+		offset += 1
+		raw_name = data[offset:offset + name_length]
+		offset += name_length
+		# 删除结尾0x00后解码。
+		syscall_list.append(
+			raw_name.rstrip(b"\x00").decode(str_code)
+		)
+def syscall(in_put):
+	return_bytes=b''
+	if in_put in syscall_list:
+		return_bytes+=b'\x03'
+		syscall_num=syscall_list.index(in_put)
+		return_bytes+=syscall_num.to_bytes(2,'little')
+	else:
+		try:
+			n=int(in_put)
+			return_bytes+=b'\x03'
+			return_bytes+=n.to_bytes(2,'little')
+		except Exception as e:
+			raise('输出了错误的syscall编号或具体名称')
+	return (return_bytes)
+
 #0x0E的模仿
 def pushstr(inputtext):
 	return_bytes=b''
@@ -997,6 +1036,328 @@ def seset(inputlist):
 	return_bytes+=call_function(function_offset)
 	return (return_bytes)
 
+ssel_offset=0
+def ssel():
+	global ssel_offset
+	off_num=int(base_off)+length_now
+	ssel_offset+=off_num
+	#章节选择
+	return_bytes=b''
+	#函数初始化
+	return_bytes+=b'\x01\x00\x00'
+	#graphload图片载入
+	return_bytes+=pushint(2500)
+	return_bytes+=pushstr('graph/ssel_bg')
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2501)
+	return_bytes+=pushstr('graph/ssel_route1')
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2502)
+	return_bytes+=pushstr('graph/ssel_route1_hover')
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2503)
+	return_bytes+=pushstr('graph/ssel_route2')
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2504)
+	return_bytes+=pushstr('graph/ssel_route2_hover')
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2505)
+	return_bytes+=pushstr('graph/ssel_route3')
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2506)
+	return_bytes+=pushstr('graph/ssel_route3_hover')
+	return_bytes+=syscall('GraphLoad')
+	#primset环节
+	return_bytes+=pushint(2507)
+	return_bytes+=pushint(2500)
+	return_bytes+=pushint(0)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetSprt')
+	return_bytes+=pushint(2508)
+	return_bytes+=pushint(2501)
+	return_bytes+=pushint(75)
+	return_bytes+=pushint(40)
+	return_bytes+=syscall('PrimSetSprt')
+	return_bytes+=pushint(2509)
+	return_bytes+=pushint(2502)
+	return_bytes+=pushint(75)
+	return_bytes+=pushint(40)
+	return_bytes+=syscall('PrimSetSprt')
+	return_bytes+=pushint(2510)
+	return_bytes+=pushint(2503)
+	return_bytes+=pushint(468)
+	return_bytes+=pushint(40)
+	return_bytes+=syscall('PrimSetSprt')
+	return_bytes+=pushint(2511)
+	return_bytes+=pushint(2504)
+	return_bytes+=pushint(468)
+	return_bytes+=pushint(40)
+	return_bytes+=syscall('PrimSetSprt')
+	return_bytes+=pushint(2512)
+	return_bytes+=pushint(2505)
+	return_bytes+=pushint(861)
+	return_bytes+=pushint(40)
+	return_bytes+=syscall('PrimSetSprt')
+	return_bytes+=pushint(2513)
+	return_bytes+=pushint(2506)
+	return_bytes+=pushint(861)
+	return_bytes+=pushint(40)
+	return_bytes+=syscall('PrimSetSprt')
+	#Groupin
+	return_bytes+=pushint(2507)
+	return_bytes+=pushint(2500)
+	return_bytes+=syscall('PrimGroupIn')
+	return_bytes+=pushint(2508)
+	return_bytes+=pushint(2500)
+	return_bytes+=syscall('PrimGroupIn')
+	return_bytes+=pushint(2509)
+	return_bytes+=pushint(2500)
+	return_bytes+=syscall('PrimGroupIn')
+	return_bytes+=pushint(2510)
+	return_bytes+=pushint(2500)
+	return_bytes+=syscall('PrimGroupIn')
+	return_bytes+=pushint(2511)
+	return_bytes+=pushint(2500)
+	return_bytes+=syscall('PrimGroupIn')
+	return_bytes+=pushint(2512)
+	return_bytes+=pushint(2500)
+	return_bytes+=syscall('PrimGroupIn')
+	return_bytes+=pushint(2513)
+	return_bytes+=pushint(2500)
+	return_bytes+=syscall('PrimGroupIn')
+	return_bytes+=pushint(2500)
+	return_bytes+=pushint(21)
+	return_bytes+=syscall('PrimGroupIn')
+	#primsetdraw
+	return_bytes+=pushint(2508)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2509)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2510)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2511)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2512)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2513)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	#初始全局变量设定
+	return_bytes+=global_set(1807,'nil')
+	return_bytes+=global_set(1808,'nil')
+	return_bytes+=global_set(3000,'nil')
+	return_bytes+=syscall('InputFlash')
+	#标定
+	tar_num=off_num+len(return_bytes)
+	label_load('%ROUTE_LOOP',tar_num)
+	#检测1
+	return_bytes+=global_set(3000,'nil')
+	return_bytes+=pushint(2508)
+	return_bytes+=pushtrue()
+	return_bytes+=syscall('PrimHit')
+	return_bytes+=b'\x14\x09\x22'
+	return_bytes+=jmpset(['jz','%CHECK_R2'])
+	return_bytes+=global_set(3000,0)
+	return_bytes+=jmpset(['jump','%REFRESH'])
+	#检测2
+	tar_num=off_num+len(return_bytes)
+	label_load('%CHECK_R2',tar_num)
+	return_bytes+=global_set(3000,'nil')
+	return_bytes+=pushint(2510)
+	return_bytes+=pushtrue()
+	return_bytes+=syscall('PrimHit')
+	return_bytes+=b'\x14\x09\x22'
+	return_bytes+=jmpset(['jz','%CHECK_R3'])
+	return_bytes+=global_set(3000,1)
+	return_bytes+=jmpset(['jump','%REFRESH'])
+	#检测3
+	tar_num=off_num+len(return_bytes)
+	label_load('%CHECK_R3',tar_num)
+	return_bytes+=global_set(3000,'nil')
+	return_bytes+=pushint(2512)
+	return_bytes+=pushtrue()
+	return_bytes+=syscall('PrimHit')
+	return_bytes+=b'\x14\x09\x22'
+	return_bytes+=jmpset(['jz','%REFRESH'])
+	return_bytes+=global_set(3000,2)
+	return_bytes+=jmpset(['jump','%REFRESH'])
+	#固定重置界面
+	tar_num=off_num+len(return_bytes)
+	label_load('%REFRESH',tar_num)
+	return_bytes+=pushint(2508)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2509)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2510)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2511)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2512)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2513)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	#hover变动检测1
+	return_bytes+=global_eq(3000,0,'%CHECK_SELECTED_2')
+	return_bytes+=pushint(2508)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2509)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=jmpset(['jump','%READ_INPUT'])
+	#检测2
+	tar_num=off_num+len(return_bytes)
+	label_load('%CHECK_SELECTED_2',tar_num)
+	return_bytes+=global_eq(3000,1,'%CHECK_SELECTED_3')
+	return_bytes+=pushint(2510)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2511)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=jmpset(['jump','%READ_INPUT'])
+	#检测3
+	tar_num=off_num+len(return_bytes)
+	label_load('%CHECK_SELECTED_3',tar_num)
+	return_bytes+=global_eq(3000,2,'%READ_INPUT')
+	return_bytes+=pushint(2512)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2513)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	#右键输入检测
+	tar_num=off_num+len(return_bytes)
+	label_load('%READ_INPUT',tar_num)
+	return_bytes+=syscall('InputGetDown')
+	return_bytes+=b'\x14'
+	return_bytes+=popglobal(3001)
+	return_bytes+=pushglobal(3001)
+	return_bytes+=pushint(3)
+	return_bytes+=b'\x1F'
+	return_bytes+=jmpset(['jz','%CHECK_CONFIRM'])
+	return_bytes+=jmpset(['jump','%CANCEL'])
+	#输入检定
+	tar_num=off_num+len(return_bytes)
+	label_load('%CHECK_CONFIRM',tar_num)
+	return_bytes+=pushglobal(3001)
+	return_bytes+=pushint(4)
+	return_bytes+=b'\x1F'
+	return_bytes+=jmpset(['jz','%WAIT_NEXT'])
+	#检查1
+	return_bytes+=global_eq(3000,0,'%CHECK_CONFIRM_2')
+	return_bytes+=jmpset(['jump','%RETURN_1'])
+	#检查2
+	tar_num=off_num+len(return_bytes)
+	label_load('%CHECK_CONFIRM_2',tar_num)
+	return_bytes+=global_eq(3000,1,'%CHECK_CONFIRM_3')
+	return_bytes+=jmpset(['jump','%RETURN_2'])
+	#检查3
+	tar_num=off_num+len(return_bytes)
+	label_load('%CHECK_CONFIRM_3',tar_num)
+	return_bytes+=global_eq(3000,2,'%WAIT_NEXT')
+	return_bytes+=jmpset(['jump','%RETURN_3'])
+	#waitnext
+	tar_num=off_num+len(return_bytes)
+	label_load('%WAIT_NEXT',tar_num)
+	return_bytes+=syscall('ThreadNext')
+	return_bytes+=jmpset(['jump','%ROUTE_LOOP'])
+	#cancel
+	tar_num=off_num+len(return_bytes)
+	label_load('%CANCEL',tar_num)
+	return_bytes+=global_set(1808,65535)
+	return_bytes+=global_set(1807,'true')
+	return_bytes+=jmpset(['jump','%CLEANUP'])
+	#ruturn结果3个
+	tar_num=off_num+len(return_bytes)
+	label_load('%RETURN_1',tar_num)
+	return_bytes+=global_set(1808,101)
+	return_bytes+=global_set(1807,'true')
+	return_bytes+=jmpset(['jump','%CLEANUP'])
+	tar_num=off_num+len(return_bytes)
+	label_load('%RETURN_2',tar_num)
+	return_bytes+=global_set(1808,102)
+	return_bytes+=global_set(1807,'true')
+	return_bytes+=jmpset(['jump','%CLEANUP'])
+	tar_num=off_num+len(return_bytes)
+	label_load('%RETURN_3',tar_num)
+	return_bytes+=global_set(1808,103)
+	return_bytes+=global_set(1807,'true')
+	return_bytes+=jmpset(['jump','%CLEANUP'])
+	#清除
+	tar_num=off_num+len(return_bytes)
+	label_load('%CLEANUP',tar_num)
+	return_bytes+=pushint(2513)
+	return_bytes+=syscall('PrimGroupOut')
+	return_bytes+=pushint(2512)
+	return_bytes+=syscall('PrimGroupOut')
+	return_bytes+=pushint(2511)
+	return_bytes+=syscall('PrimGroupOut')
+	return_bytes+=pushint(2510)
+	return_bytes+=syscall('PrimGroupOut')
+	return_bytes+=pushint(2509)
+	return_bytes+=syscall('PrimGroupOut')
+	return_bytes+=pushint(2508)
+	return_bytes+=syscall('PrimGroupOut')
+	return_bytes+=pushint(2507)
+	return_bytes+=syscall('PrimGroupOut')
+	return_bytes+=pushint(2500)
+	return_bytes+=syscall('PrimGroupOut')
+	return_bytes+=pushint(2513)
+	return_bytes+=syscall('PrimSetNull')
+	return_bytes+=pushint(2512)
+	return_bytes+=syscall('PrimSetNull')
+	return_bytes+=pushint(2511)
+	return_bytes+=syscall('PrimSetNull')
+	return_bytes+=pushint(2510)
+	return_bytes+=syscall('PrimSetNull')
+	return_bytes+=pushint(2509)
+	return_bytes+=syscall('PrimSetNull')
+	return_bytes+=pushint(2508)
+	return_bytes+=syscall('PrimSetNull')
+	return_bytes+=pushint(2507)
+	return_bytes+=syscall('PrimSetNull')
+	return_bytes+=pushint(2500)
+	return_bytes+=syscall('PrimSetNull')
+	return_bytes+=pushint(2500)
+	return_bytes+=pushnil()
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2501)
+	return_bytes+=pushnil()
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2502)
+	return_bytes+=pushnil()
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2503)
+	return_bytes+=pushnil()
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2504)
+	return_bytes+=pushnil()
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2505)
+	return_bytes+=pushnil()
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2506)
+	return_bytes+=pushnil()
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushglobal(1808)
+	return_bytes+=b'\x05'
+	return (return_bytes)
+
+
+
+
 
 def line_to_hcb(script):
 	global isstart
@@ -1145,7 +1506,7 @@ def line_to_hcb(script):
 					cg_offset=int(int(base_off)+length_now)
 					cg_loaded[inputlist[-1].upper()]=cg_offset
 					length_now+=len(result)
-					new_off+=len(result)
+					#new_off+=len(result)
 					print(cg_loaded)
 					
 			elif inputlist[0]=='chaload':
@@ -1154,22 +1515,32 @@ def line_to_hcb(script):
 					return_bytes+=result
 					
 					length_now+=len(result)
-					new_off+=len(result)
+					#new_off+=len(result)
 					print(cha_list)
 			elif inputlist[0]=='bgload':
 				if isstart==0:
 					result=bgload(inputlist[1:])
 					return_bytes+=result
 					length_now+=len(result)
-					new_off+=len(result)
+					#new_off+=len(result)
+			elif inputlist[0]=='ssel':
+				if isstart==0 and ssel_offset==0:
+					result=ssel()
+				elif isstart!=0 and ssel_offset!=0:
+					result=call_function(ssel_offset)
+				else:
+					print('这个东西没被定义过啦')
+					result=b''
+				return_bytes+=result
+				length_now+=len(result)
 			elif inputlist[0]=='start':
 				isstart+=1
-				#return_bytes+=header_bytes
-				#length_now+=len(header_bytes)
+				new_off+=length_now
 				return_bytes+=b'\x01\x00\x00'
 				length_now+=3
 				return_bytes+=effectset([0,1000])
 				length_now+=len(effectset([0,1000]))
+				
 			elif inputlist[0]=='end':
 				isend+=1
 				return_bytes+=ender_bytes
