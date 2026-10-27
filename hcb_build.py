@@ -1067,6 +1067,12 @@ def ssel():
 	return_bytes+=pushint(2506)
 	return_bytes+=pushstr('graph/ssel_route3_hover')
 	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2507)
+	return_bytes+=pushstr('graph/ssel_ps1')
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2508)
+	return_bytes+=pushstr('graph/ssel_ps1_hover')
+	return_bytes+=syscall('GraphLoad')
 	#primset环节
 	return_bytes+=pushint(2507)
 	return_bytes+=pushint(2500)
@@ -1076,31 +1082,41 @@ def ssel():
 	return_bytes+=pushint(2508)
 	return_bytes+=pushint(2501)
 	return_bytes+=pushint(75)
-	return_bytes+=pushint(40)
+	return_bytes+=pushint(260)
 	return_bytes+=syscall('PrimSetSprt')
 	return_bytes+=pushint(2509)
 	return_bytes+=pushint(2502)
 	return_bytes+=pushint(75)
-	return_bytes+=pushint(40)
+	return_bytes+=pushint(260)
 	return_bytes+=syscall('PrimSetSprt')
 	return_bytes+=pushint(2510)
 	return_bytes+=pushint(2503)
 	return_bytes+=pushint(468)
-	return_bytes+=pushint(40)
+	return_bytes+=pushint(260)
 	return_bytes+=syscall('PrimSetSprt')
 	return_bytes+=pushint(2511)
 	return_bytes+=pushint(2504)
 	return_bytes+=pushint(468)
-	return_bytes+=pushint(40)
+	return_bytes+=pushint(260)
 	return_bytes+=syscall('PrimSetSprt')
 	return_bytes+=pushint(2512)
 	return_bytes+=pushint(2505)
 	return_bytes+=pushint(861)
-	return_bytes+=pushint(40)
+	return_bytes+=pushint(260)
 	return_bytes+=syscall('PrimSetSprt')
 	return_bytes+=pushint(2513)
 	return_bytes+=pushint(2506)
 	return_bytes+=pushint(861)
+	return_bytes+=pushint(260)
+	return_bytes+=syscall('PrimSetSprt')
+	return_bytes+=pushint(2514)
+	return_bytes+=pushint(2507)
+	return_bytes+=pushint(75)
+	return_bytes+=pushint(40)
+	return_bytes+=syscall('PrimSetSprt')
+	return_bytes+=pushint(2515)
+	return_bytes+=pushint(2508)
+	return_bytes+=pushint(75)
 	return_bytes+=pushint(40)
 	return_bytes+=syscall('PrimSetSprt')
 	#Groupin
@@ -1125,6 +1141,12 @@ def ssel():
 	return_bytes+=pushint(2513)
 	return_bytes+=pushint(2500)
 	return_bytes+=syscall('PrimGroupIn')
+	return_bytes+=pushint(2514)
+	return_bytes+=pushint(2500)
+	return_bytes+=syscall('PrimGroupIn')
+	return_bytes+=pushint(2515)
+	return_bytes+=pushint(2500)
+	return_bytes+=syscall('PrimGroupIn')
 	return_bytes+=pushint(2500)
 	return_bytes+=pushint(21)
 	return_bytes+=syscall('PrimGroupIn')
@@ -1147,6 +1169,12 @@ def ssel():
 	return_bytes+=pushint(2513)
 	return_bytes+=pushint(0)
 	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2514)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2515)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
 	#初始全局变量设定
 	return_bytes+=global_set(1807,'nil')
 	return_bytes+=global_set(1808,'nil')
@@ -1155,14 +1183,24 @@ def ssel():
 	#标定
 	tar_num=off_num+len(return_bytes)
 	label_load('%ROUTE_LOOP',tar_num)
-	#检测1
+	#检测0
 	return_bytes+=global_set(3000,'nil')
+	return_bytes+=pushint(2514)
+	return_bytes+=pushtrue()
+	return_bytes+=syscall('PrimHit')
+	return_bytes+=b'\x14\x09\x22'
+	return_bytes+=jmpset(['jz','%CHECK_R1'])
+	return_bytes+=global_set(3000,0)
+	return_bytes+=jmpset(['jump','%REFRESH'])
+	#检测1
+	tar_num=off_num+len(return_bytes)
+	label_load('%CHECK_R1',tar_num)
 	return_bytes+=pushint(2508)
 	return_bytes+=pushtrue()
 	return_bytes+=syscall('PrimHit')
 	return_bytes+=b'\x14\x09\x22'
 	return_bytes+=jmpset(['jz','%CHECK_R2'])
-	return_bytes+=global_set(3000,0)
+	return_bytes+=global_set(3000,1)
 	return_bytes+=jmpset(['jump','%REFRESH'])
 	#检测2
 	tar_num=off_num+len(return_bytes)
@@ -1173,7 +1211,7 @@ def ssel():
 	return_bytes+=syscall('PrimHit')
 	return_bytes+=b'\x14\x09\x22'
 	return_bytes+=jmpset(['jz','%CHECK_R3'])
-	return_bytes+=global_set(3000,1)
+	return_bytes+=global_set(3000,2)
 	return_bytes+=jmpset(['jump','%REFRESH'])
 	#检测3
 	tar_num=off_num+len(return_bytes)
@@ -1184,7 +1222,7 @@ def ssel():
 	return_bytes+=syscall('PrimHit')
 	return_bytes+=b'\x14\x09\x22'
 	return_bytes+=jmpset(['jz','%REFRESH'])
-	return_bytes+=global_set(3000,2)
+	return_bytes+=global_set(3000,3)
 	return_bytes+=jmpset(['jump','%REFRESH'])
 	#固定重置界面
 	tar_num=off_num+len(return_bytes)
@@ -1207,8 +1245,25 @@ def ssel():
 	return_bytes+=pushint(2513)
 	return_bytes+=pushint(0)
 	return_bytes+=syscall('PrimSetDraw')
-	#hover变动检测1
-	return_bytes+=global_eq(3000,0,'%CHECK_SELECTED_2')
+	return_bytes+=pushint(2514)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2515)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	#hover变动检测0
+	return_bytes+=global_eq(3000,0,'%CHECK_SELECTED_1')
+	return_bytes+=pushint(2514)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(2515)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=jmpset(['jump','%READ_INPUT'])
+	#检测1
+	tar_num=off_num+len(return_bytes)
+	label_load('%CHECK_SELECTED_1',tar_num)
+	return_bytes+=global_eq(3000,1,'%CHECK_SELECTED_2')
 	return_bytes+=pushint(2508)
 	return_bytes+=pushint(0)
 	return_bytes+=syscall('PrimSetDraw')
@@ -1219,7 +1274,7 @@ def ssel():
 	#检测2
 	tar_num=off_num+len(return_bytes)
 	label_load('%CHECK_SELECTED_2',tar_num)
-	return_bytes+=global_eq(3000,1,'%CHECK_SELECTED_3')
+	return_bytes+=global_eq(3000,2,'%CHECK_SELECTED_3')
 	return_bytes+=pushint(2510)
 	return_bytes+=pushint(0)
 	return_bytes+=syscall('PrimSetDraw')
@@ -1230,7 +1285,7 @@ def ssel():
 	#检测3
 	tar_num=off_num+len(return_bytes)
 	label_load('%CHECK_SELECTED_3',tar_num)
-	return_bytes+=global_eq(3000,2,'%READ_INPUT')
+	return_bytes+=global_eq(3000,3,'%READ_INPUT')
 	return_bytes+=pushint(2512)
 	return_bytes+=pushint(0)
 	return_bytes+=syscall('PrimSetDraw')
@@ -1255,18 +1310,23 @@ def ssel():
 	return_bytes+=pushint(4)
 	return_bytes+=b'\x1F'
 	return_bytes+=jmpset(['jz','%WAIT_NEXT'])
+	#检查0
+	return_bytes+=global_eq(3000,0,'%CHECK_CONFIRM_1')
+	return_bytes+=jmpset(['jump','%RETURN_NEWGAME'])
 	#检查1
-	return_bytes+=global_eq(3000,0,'%CHECK_CONFIRM_2')
+	tar_num=off_num+len(return_bytes)
+	label_load('%CHECK_CONFIRM_1',tar_num)
+	return_bytes+=global_eq(3000,1,'%CHECK_CONFIRM_2')
 	return_bytes+=jmpset(['jump','%RETURN_1'])
 	#检查2
 	tar_num=off_num+len(return_bytes)
 	label_load('%CHECK_CONFIRM_2',tar_num)
-	return_bytes+=global_eq(3000,1,'%CHECK_CONFIRM_3')
+	return_bytes+=global_eq(3000,2,'%CHECK_CONFIRM_3')
 	return_bytes+=jmpset(['jump','%RETURN_2'])
 	#检查3
 	tar_num=off_num+len(return_bytes)
 	label_load('%CHECK_CONFIRM_3',tar_num)
-	return_bytes+=global_eq(3000,2,'%WAIT_NEXT')
+	return_bytes+=global_eq(3000,3,'%WAIT_NEXT')
 	return_bytes+=jmpset(['jump','%RETURN_3'])
 	#waitnext
 	tar_num=off_num+len(return_bytes)
@@ -1279,7 +1339,12 @@ def ssel():
 	return_bytes+=global_set(1808,65535)
 	return_bytes+=global_set(1807,'true')
 	return_bytes+=jmpset(['jump','%CLEANUP'])
-	#ruturn结果3个
+	#ruturn结果
+	tar_num=off_num+len(return_bytes)
+	label_load('%RETURN_NEWGAME',tar_num)
+	return_bytes+=global_set(1808,100)
+	return_bytes+=global_set(1807,'true')
+	return_bytes+=jmpset(['jump','%CLEANUP'])
 	tar_num=off_num+len(return_bytes)
 	label_load('%RETURN_1',tar_num)
 	return_bytes+=global_set(1808,101)
@@ -1298,6 +1363,10 @@ def ssel():
 	#清除
 	tar_num=off_num+len(return_bytes)
 	label_load('%CLEANUP',tar_num)
+	return_bytes+=pushint(2515)
+	return_bytes+=syscall('PrimGroupOut')
+	return_bytes+=pushint(2514)
+	return_bytes+=syscall('PrimGroupOut')
 	return_bytes+=pushint(2513)
 	return_bytes+=syscall('PrimGroupOut')
 	return_bytes+=pushint(2512)
@@ -1349,6 +1418,12 @@ def ssel():
 	return_bytes+=pushnil()
 	return_bytes+=syscall('GraphLoad')
 	return_bytes+=pushint(2506)
+	return_bytes+=pushnil()
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2507)
+	return_bytes+=pushnil()
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=pushint(2508)
 	return_bytes+=pushnil()
 	return_bytes+=syscall('GraphLoad')
 	return_bytes+=pushglobal(1808)
@@ -1486,11 +1561,19 @@ def line_to_hcb(script):
 				return_bytes+=result
 				length_now+=len(result)
 			elif inputlist[0]=='global_set':
-				result=global_set(inputlist[1:])
+				global_num=inputlist[1]
+				try:
+					setted=int(inputlist[2])
+				except Exception as e:
+					setted=inputlist[2]
+				result=global_set(global_num,setted)
 				return_bytes+=result
 				length_now+=len(result)
 			elif inputlist[0]=='global_eq':
-				result=global_eq(inputlist[1:])
+				global_num=inputlist[1]
+				setted=inputlist[2]
+				target_label=inputlist[3]
+				result=global_eq(global_num,setted,target_label)
 				return_bytes+=result
 				length_now+=len(result)
 			elif inputlist[0]=='test':
