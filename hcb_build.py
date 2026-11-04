@@ -292,6 +292,51 @@ def fog():
 	return_bytes+=call_function(function_offset)
 	return(return_bytes)
 
+
+EFlist={
+	'yoru':0x0000B54E,
+	'01':0x00085C5A,
+	'05':0x00085CBE,
+	'06':0x00085D22,
+	'08':0x00085D87,
+	'09':0x000861CA,
+	'09b':0x000862B9,
+	'10':0x00086329,
+	'12':0x00086463,
+	'17':0x000864F4,
+	'18':0x00086573,
+	'19':0x000865AE,
+	#'syouki'是雾气特效，上面写了
+	'02':0x867A8
+}
+def efset(inputlist):
+	return_bytes=b''
+	if inputlist[0]=='08' or 8:
+		function_offset=EFlist['08']
+		inputrange=range(1,13)
+	elif inputlist[0]=='yoru':
+		function_offset=EFlist['yoru']
+		inputrange=[1,10,11,12,100]
+	if inputlist[-1]=='off':
+		return_bytes+=pushint(0)
+		return_bytes+=pushnil(4)
+	else:
+		return_bytes+=pushint(1)
+		return_bytes+=pushnil(1)
+		try:
+			ef_num=int(inputlist[-1])
+			if ef_num not in inputrange:
+				ef_num=0
+		except Exception as e:
+			ef08_num=0
+		return_bytes+=pushint(ef_num)
+		return_bytes+=pushnil(2)
+	return_bytes+=call_function(function_offset)
+	return (return_bytes)
+	
+
+
+
 def endback(num):
 	#fin效果
 	return_bytes=b''
@@ -966,14 +1011,24 @@ def msgset(inputtype):
 		#0003b797，强制恢复对话栏的显示
 		#return_bytes+=b'\x0c\x00\x02\x97\xb7\x03\x00'
 	elif inputtype=='boxin':
-		#000864F4，此处大概是恢复对话框的入参(0,nil)
+		#000864F4，恢复对话框且无滤镜的入参(0,nil)
 		return_bytes+=pushint(0)
 		return_bytes+=pushnil()
 		return_bytes+=call_function(function_box)
 	elif inputtype=='boxout':
-		#000864F4，此处是隐藏对话框的入参(1,-2)
+		#000864F4，此处是隐藏对话框且无滤镜的入参(1,-2)
 		return_bytes+=pushint(1)
 		return_bytes+=pushint(-2)
+		return_bytes+=call_function(function_box)
+	elif inputtype=='effect_box':
+		#0x000864F4的原本用法，有滤镜且显示对话框
+		return_bytes+=pushint(1)
+		return_bytes+=pushint(-1)
+		return_bytes+=call_function(function_box)
+	elif inputtype=='effect_boxout':
+		#有滤镜无对话框
+		return_bytes+=pushint(0)
+		return_bytes+=pushint(-1)
 		return_bytes+=call_function(function_box)
 	else:
 		print('未定义对话栏位置或特殊操作')
@@ -1182,51 +1237,51 @@ def ssel():
 	return_bytes+=syscall('InputFlash')
 	#标定
 	tar_num=off_num+len(return_bytes)
-	label_load('%ROUTE_LOOP',tar_num)
+	label_load('%ssel_ROUTE_LOOP',tar_num)
 	#检测0
 	return_bytes+=global_set(3000,'nil')
 	return_bytes+=pushint(2514)
 	return_bytes+=pushtrue()
 	return_bytes+=syscall('PrimHit')
 	return_bytes+=b'\x14\x09\x22'
-	return_bytes+=jmpset(['jz','%CHECK_R1'])
+	return_bytes+=jmpset(['jz','%ssel_CHECK_R1'])
 	return_bytes+=global_set(3000,0)
-	return_bytes+=jmpset(['jump','%REFRESH'])
+	return_bytes+=jmpset(['jump','%ssel_REFRESH'])
 	#检测1
 	tar_num=off_num+len(return_bytes)
-	label_load('%CHECK_R1',tar_num)
+	label_load('%ssel_CHECK_R1',tar_num)
 	return_bytes+=pushint(2508)
 	return_bytes+=pushtrue()
 	return_bytes+=syscall('PrimHit')
 	return_bytes+=b'\x14\x09\x22'
-	return_bytes+=jmpset(['jz','%CHECK_R2'])
+	return_bytes+=jmpset(['jz','%ssel_CHECK_R2'])
 	return_bytes+=global_set(3000,1)
-	return_bytes+=jmpset(['jump','%REFRESH'])
+	return_bytes+=jmpset(['jump','%ssel_REFRESH'])
 	#检测2
 	tar_num=off_num+len(return_bytes)
-	label_load('%CHECK_R2',tar_num)
+	label_load('%ssel_CHECK_R2',tar_num)
 	return_bytes+=global_set(3000,'nil')
 	return_bytes+=pushint(2510)
 	return_bytes+=pushtrue()
 	return_bytes+=syscall('PrimHit')
 	return_bytes+=b'\x14\x09\x22'
-	return_bytes+=jmpset(['jz','%CHECK_R3'])
+	return_bytes+=jmpset(['jz','%ssel_CHECK_R3'])
 	return_bytes+=global_set(3000,2)
-	return_bytes+=jmpset(['jump','%REFRESH'])
+	return_bytes+=jmpset(['jump','%ssel_REFRESH'])
 	#检测3
 	tar_num=off_num+len(return_bytes)
-	label_load('%CHECK_R3',tar_num)
+	label_load('%ssel_CHECK_R3',tar_num)
 	return_bytes+=global_set(3000,'nil')
 	return_bytes+=pushint(2512)
 	return_bytes+=pushtrue()
 	return_bytes+=syscall('PrimHit')
 	return_bytes+=b'\x14\x09\x22'
-	return_bytes+=jmpset(['jz','%REFRESH'])
+	return_bytes+=jmpset(['jz','%ssel_REFRESH'])
 	return_bytes+=global_set(3000,3)
-	return_bytes+=jmpset(['jump','%REFRESH'])
+	return_bytes+=jmpset(['jump','%ssel_REFRESH'])
 	#固定重置界面
 	tar_num=off_num+len(return_bytes)
-	label_load('%REFRESH',tar_num)
+	label_load('%ssel_REFRESH',tar_num)
 	return_bytes+=pushint(2508)
 	return_bytes+=pushint(1)
 	return_bytes+=syscall('PrimSetDraw')
@@ -1252,40 +1307,40 @@ def ssel():
 	return_bytes+=pushint(0)
 	return_bytes+=syscall('PrimSetDraw')
 	#hover变动检测0
-	return_bytes+=global_eq(3000,0,'%CHECK_SELECTED_1')
+	return_bytes+=global_eq(3000,0,'%ssel_CHECK_SELECTED_1')
 	return_bytes+=pushint(2514)
 	return_bytes+=pushint(0)
 	return_bytes+=syscall('PrimSetDraw')
 	return_bytes+=pushint(2515)
 	return_bytes+=pushint(1)
 	return_bytes+=syscall('PrimSetDraw')
-	return_bytes+=jmpset(['jump','%READ_INPUT'])
+	return_bytes+=jmpset(['jump','%ssel_READ_INPUT'])
 	#检测1
 	tar_num=off_num+len(return_bytes)
-	label_load('%CHECK_SELECTED_1',tar_num)
-	return_bytes+=global_eq(3000,1,'%CHECK_SELECTED_2')
+	label_load('%ssel_CHECK_SELECTED_1',tar_num)
+	return_bytes+=global_eq(3000,1,'%ssel_CHECK_SELECTED_2')
 	return_bytes+=pushint(2508)
 	return_bytes+=pushint(0)
 	return_bytes+=syscall('PrimSetDraw')
 	return_bytes+=pushint(2509)
 	return_bytes+=pushint(1)
 	return_bytes+=syscall('PrimSetDraw')
-	return_bytes+=jmpset(['jump','%READ_INPUT'])
+	return_bytes+=jmpset(['jump','%ssel_READ_INPUT'])
 	#检测2
 	tar_num=off_num+len(return_bytes)
-	label_load('%CHECK_SELECTED_2',tar_num)
-	return_bytes+=global_eq(3000,2,'%CHECK_SELECTED_3')
+	label_load('%ssel_CHECK_SELECTED_2',tar_num)
+	return_bytes+=global_eq(3000,2,'%ssel_CHECK_SELECTED_3')
 	return_bytes+=pushint(2510)
 	return_bytes+=pushint(0)
 	return_bytes+=syscall('PrimSetDraw')
 	return_bytes+=pushint(2511)
 	return_bytes+=pushint(1)
 	return_bytes+=syscall('PrimSetDraw')
-	return_bytes+=jmpset(['jump','%READ_INPUT'])
+	return_bytes+=jmpset(['jump','%ssel_READ_INPUT'])
 	#检测3
 	tar_num=off_num+len(return_bytes)
-	label_load('%CHECK_SELECTED_3',tar_num)
-	return_bytes+=global_eq(3000,3,'%READ_INPUT')
+	label_load('%ssel_CHECK_SELECTED_3',tar_num)
+	return_bytes+=global_eq(3000,3,'%ssel_READ_INPUT')
 	return_bytes+=pushint(2512)
 	return_bytes+=pushint(0)
 	return_bytes+=syscall('PrimSetDraw')
@@ -1294,75 +1349,75 @@ def ssel():
 	return_bytes+=syscall('PrimSetDraw')
 	#右键输入检测
 	tar_num=off_num+len(return_bytes)
-	label_load('%READ_INPUT',tar_num)
+	label_load('%ssel_READ_INPUT',tar_num)
 	return_bytes+=syscall('InputGetDown')
 	return_bytes+=b'\x14'
 	return_bytes+=popglobal(3001)
 	return_bytes+=pushglobal(3001)
 	return_bytes+=pushint(3)
 	return_bytes+=b'\x1F'
-	return_bytes+=jmpset(['jz','%CHECK_CONFIRM'])
-	return_bytes+=jmpset(['jump','%CANCEL'])
+	return_bytes+=jmpset(['jz','%ssel_CHECK_CONFIRM'])
+	return_bytes+=jmpset(['jump','%ssel_CANCEL'])
 	#输入检定
 	tar_num=off_num+len(return_bytes)
-	label_load('%CHECK_CONFIRM',tar_num)
+	label_load('%ssel_CHECK_CONFIRM',tar_num)
 	return_bytes+=pushglobal(3001)
 	return_bytes+=pushint(4)
 	return_bytes+=b'\x1F'
-	return_bytes+=jmpset(['jz','%WAIT_NEXT'])
+	return_bytes+=jmpset(['jz','%ssel_WAIT_NEXT'])
 	#检查0
-	return_bytes+=global_eq(3000,0,'%CHECK_CONFIRM_1')
-	return_bytes+=jmpset(['jump','%RETURN_NEWGAME'])
+	return_bytes+=global_eq(3000,0,'%ssel_CHECK_CONFIRM_1')
+	return_bytes+=jmpset(['jump','%ssel_RETURN_NEWGAME'])
 	#检查1
 	tar_num=off_num+len(return_bytes)
-	label_load('%CHECK_CONFIRM_1',tar_num)
-	return_bytes+=global_eq(3000,1,'%CHECK_CONFIRM_2')
-	return_bytes+=jmpset(['jump','%RETURN_1'])
+	label_load('%ssel_CHECK_CONFIRM_1',tar_num)
+	return_bytes+=global_eq(3000,1,'%ssel_CHECK_CONFIRM_2')
+	return_bytes+=jmpset(['jump','%ssel_RETURN_1'])
 	#检查2
 	tar_num=off_num+len(return_bytes)
-	label_load('%CHECK_CONFIRM_2',tar_num)
-	return_bytes+=global_eq(3000,2,'%CHECK_CONFIRM_3')
-	return_bytes+=jmpset(['jump','%RETURN_2'])
+	label_load('%ssel_CHECK_CONFIRM_2',tar_num)
+	return_bytes+=global_eq(3000,2,'%ssel_CHECK_CONFIRM_3')
+	return_bytes+=jmpset(['jump','%ssel_RETURN_2'])
 	#检查3
 	tar_num=off_num+len(return_bytes)
-	label_load('%CHECK_CONFIRM_3',tar_num)
-	return_bytes+=global_eq(3000,3,'%WAIT_NEXT')
-	return_bytes+=jmpset(['jump','%RETURN_3'])
+	label_load('%ssel_CHECK_CONFIRM_3',tar_num)
+	return_bytes+=global_eq(3000,3,'%ssel_WAIT_NEXT')
+	return_bytes+=jmpset(['jump','%ssel_RETURN_3'])
 	#waitnext
 	tar_num=off_num+len(return_bytes)
-	label_load('%WAIT_NEXT',tar_num)
+	label_load('%ssel_WAIT_NEXT',tar_num)
 	return_bytes+=syscall('ThreadNext')
-	return_bytes+=jmpset(['jump','%ROUTE_LOOP'])
+	return_bytes+=jmpset(['jump','%ssel_ROUTE_LOOP'])
 	#cancel
 	tar_num=off_num+len(return_bytes)
-	label_load('%CANCEL',tar_num)
+	label_load('%ssel_CANCEL',tar_num)
 	return_bytes+=global_set(1808,65535)
 	return_bytes+=global_set(1807,'true')
-	return_bytes+=jmpset(['jump','%CLEANUP'])
+	return_bytes+=jmpset(['jump','%ssel_CLEANUP'])
 	#ruturn结果
 	tar_num=off_num+len(return_bytes)
-	label_load('%RETURN_NEWGAME',tar_num)
+	label_load('%ssel_RETURN_NEWGAME',tar_num)
 	return_bytes+=global_set(1808,100)
 	return_bytes+=global_set(1807,'true')
-	return_bytes+=jmpset(['jump','%CLEANUP'])
+	return_bytes+=jmpset(['jump','%ssel_CLEANUP'])
 	tar_num=off_num+len(return_bytes)
-	label_load('%RETURN_1',tar_num)
+	label_load('%ssel_RETURN_1',tar_num)
 	return_bytes+=global_set(1808,101)
 	return_bytes+=global_set(1807,'true')
-	return_bytes+=jmpset(['jump','%CLEANUP'])
+	return_bytes+=jmpset(['jump','%ssel_CLEANUP'])
 	tar_num=off_num+len(return_bytes)
-	label_load('%RETURN_2',tar_num)
+	label_load('%ssel_RETURN_2',tar_num)
 	return_bytes+=global_set(1808,102)
 	return_bytes+=global_set(1807,'true')
-	return_bytes+=jmpset(['jump','%CLEANUP'])
+	return_bytes+=jmpset(['jump','%ssel_CLEANUP'])
 	tar_num=off_num+len(return_bytes)
-	label_load('%RETURN_3',tar_num)
+	label_load('%ssel_RETURN_3',tar_num)
 	return_bytes+=global_set(1808,103)
 	return_bytes+=global_set(1807,'true')
-	return_bytes+=jmpset(['jump','%CLEANUP'])
+	return_bytes+=jmpset(['jump','%ssel_CLEANUP'])
 	#清除
 	tar_num=off_num+len(return_bytes)
-	label_load('%CLEANUP',tar_num)
+	label_load('%ssel_CLEANUP',tar_num)
 	return_bytes+=pushint(2515)
 	return_bytes+=syscall('PrimGroupOut')
 	return_bytes+=pushint(2514)
@@ -1430,9 +1485,142 @@ def ssel():
 	return_bytes+=b'\x05'
 	return (return_bytes)
 
+#成就系统主函数
+achieve_main_offset=0
+def achieve_main():
+	global achieve_main_offset
+	off_num=int(base_off)+length_now
+	achieve_main_offset+=off_num
+	return_bytes=b''
+	#初始化与清空原槽位
+	return_bytes+=b'\x01\x01\x00'
+	return_bytes+=pushint(480)
+	return_bytes+=syscall('PrimSetNull')
+	#图片加载
+	return_bytes+=pushint(480)
+	return_bytes+=b'\x10\xFE'
+	#return_bytes+=pushstr('graph/ssel_bg')
+	return_bytes+=syscall('GraphLoad')
+	#primset
+	return_bytes+=pushint(480)
+	return_bytes+=pushint(480)
+	return_bytes+=pushnil(2)
+	return_bytes+=syscall('PrimSetSprt')
+	#return_bytes+=pushint(480)
+	#return_bytes+=pushint(640)
+	#return_bytes+=pushint(360)
+	#return_bytes+=syscall('PrimSetOP')
+	return_bytes+=pushint(480)
+	return_bytes+=pushint(640)
+	return_bytes+=pushint(400)
+	return_bytes+=syscall('PrimSetXY')
+	return_bytes+=pushint(480)
+	return_bytes+=pushint(6)
+	return_bytes+=syscall('PrimGroupIn')
+	return_bytes+=pushint(480)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetAlpha')
+	return_bytes+=pushint(480)
+	return_bytes+=pushint(1)
+	return_bytes+=syscall('PrimSetDraw')
+	#move
+	return_bytes+=pushint(480)
+	return_bytes+=pushint(640)
+	return_bytes+=pushint(400)
+	return_bytes+=pushint(640)
+	return_bytes+=pushint(320)
+	return_bytes+=pushint(450)
+	return_bytes+=pushint(3)
+	return_bytes+=pushnil()
+	return_bytes+=syscall('MotionMove')
+	return_bytes+=pushint(480)
+	return_bytes+=pushint(0)
+	return_bytes+=pushint(255)
+	return_bytes+=pushint(450)
+	return_bytes+=pushnil(2)
+	return_bytes+=syscall('MotionAlpha')
+	#等待循环
+	tar_num=off_num+len(return_bytes)
+	label_load('%achieve_WAIT_IN',tar_num)
+	return_bytes+=pushint(480)
+	return_bytes+=syscall('MotionAlphaTest')
+	return_bytes+=b'\x14\x09\x22'
+	return_bytes+=jmpset(['jz','%achieve_CHECK_MOVE'])
+	return_bytes+=syscall('ThreadNext')
+	return_bytes+=jmpset(['jump','%achieve_WAIT_IN'])
+	tar_num=off_num+len(return_bytes)
+	label_load('%achieve_CHECK_MOVE',tar_num)
+	return_bytes+=pushint(480)
+	return_bytes+=syscall('MotionMoveTest')
+	return_bytes+=b'\x14\x09\x22'
+	return_bytes+=jmpset(['jz','%achieve_STAY'])
+	return_bytes+=syscall('ThreadNext')
+	return_bytes+=jmpset(['jump','%achieve_WAIT_IN'])
+	#退出
+	tar_num=off_num+len(return_bytes)
+	label_load('%achieve_STAY',tar_num)
+	return_bytes+=syscall('InputGetState')
+	return_bytes+=b'\x14\x0c\x01\x1F'
+	return_bytes+=jmpset(['jz','%achieve_Ctrltest'])
+	return_bytes+=pushint(1500)
+	tar_num=off_num+len(return_bytes)
+	label_load('%achieve_Ctrltest',tar_num)
+	return_bytes+=pushint(480)
+	return_bytes+=pushint(255)
+	return_bytes+=pushint(0)
+	return_bytes+=pushint(400)
+	return_bytes+=pushnil(2)
+	return_bytes+=syscall('MotionAlpha')
+	tar_num=off_num+len(return_bytes)
+	label_load('%achieve_WAIT_OUT',tar_num)
+	return_bytes+=pushint(480)
+	return_bytes+=syscall('MotionAlphaTest')
+	return_bytes+=b'\x14\x09\x22'
+	return_bytes+=jmpset(['jz','%achieve_CLEANUP'])
+	return_bytes+=syscall('ThreadNext')
+	return_bytes+=jmpset(['jump','%achieve_WAIT_OUT'])
+	tar_num=off_num+len(return_bytes)
+	label_load('%achieve_CLEANUP',tar_num)
+	return_bytes+=pushint(480)
+	return_bytes+=pushint(0)
+	return_bytes+=syscall('PrimSetDraw')
+	return_bytes+=pushint(480)
+	return_bytes+=syscall('PrimGroupOut')
+	return_bytes+=pushint(480)
+	return_bytes+=syscall('PrimSetNull')
+	return_bytes+=pushint(480)
+	return_bytes+=pushnil()
+	return_bytes+=syscall('GraphLoad')
+	return_bytes+=b'\x04'
+	return (return_bytes)
 
+achieve_num=1
+achieve_list={}
+def achieve_load(graphname):
+	global achieve_num
+	off_num=int(base_off)+length_now
+	achieve_list[achieve_num]=off_num
+	return_bytes=b'\x01\x00\x00'
+	achieve_global=2027+achieve_num
+	return_bytes+=global_eq(achieve_global,0,f'%achieve_{achieve_num}_end')
+	return_bytes+=pushstr('graph/')
+	return_bytes+=pushstr(graphname)
+	return_bytes+=b'\x1A'
+	return_bytes+=call_function(achieve_main_offset)
+	return_bytes+=global_set(achieve_global,1)
+	tar_num=off_num+len(return_bytes)
+	label_load(f'%achieve_{achieve_num}_end',tar_num)
+	return_bytes+=b'\x04\x04'
+	achieve_num+=1
+	return (return_bytes)
 
-
+def achieve_set(n):
+	if n in achieve_list:
+		return_bytes=call_function(achieve_list[n])
+	else:
+		return_bytes=b''
+		print('成就数没这么大')
+	return (return_bytes)
 
 def line_to_hcb(script):
 	global isstart
@@ -1614,6 +1802,17 @@ def line_to_hcb(script):
 				else:
 					print('这个东西没被定义过啦')
 					result=b''
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='achieve':
+				if isstart==0:
+					result=achieve_main()
+				else:
+					result=achieve_set(int(inputlist[1]))
+				return_bytes+=result
+				length_now+=len(result)
+			elif inputlist[0]=='achieve_load':
+				result=achieve_load(inputlist[-1])
 				return_bytes+=result
 				length_now+=len(result)
 			elif inputlist[0]=='start':
